@@ -1,0 +1,49 @@
+# create and install .tfm files for plain.tex.
+rm -f trouble # clean list of trouble makeing fonts
+./shell/mkfont cmr10 # roman text
+./shell/mkfont cmr9
+./shell/mkfont cmr8
+./shell/mkfont cmr7
+./shell/mkfont cmr6
+./shell/mkfont cmr5
+./shell/mkfont cmmi10 # math italic
+./shell/mkfont cmmi9
+./shell/mkfont cmmi8
+./shell/mkfont cmmi7
+./shell/mkfont cmmi6
+./shell/mkfont cmmi5
+./shell/mkfont cmsy10 # math symbols
+./shell/mkfont cmsy9
+./shell/mkfont cmsy8
+./shell/mkfont cmsy7
+./shell/mkfont cmsy6
+./shell/mkfont cmsy5
+./shell/mkfont cmex10 # math extension
+./shell/mkfont cmss10 # sans serif
+./shell/mkfont cmssq8
+./shell/mkfont cmssi10 # sans serif italic
+./shell/mkfont cmssqi8
+./shell/mkfont cmbx10 # boldface extended
+./shell/mkfont cmbx9
+./shell/mkfont cmbx8
+./shell/mkfont cmbx7
+./shell/mkfont cmbx6
+./shell/mkfont cmbx5
+./shell/mkfont cmtt10 # typewriter
+./shell/mkfont cmtt9
+./shell/mkfont cmtt8
+./shell/mkfont cmsltt10 # slanted typewriter
+./shell/mkfont cmsl10 # slanted roman
+./shell/mkfont cmsl9
+./shell/mkfont cmsl8
+./shell/mkfont cmti10 # text italic
+./shell/mkfont cmti9
+./shell/mkfont cmti8
+./shell/mkfont cmti7
+./shell/mkfont cmu10 # unslanted text italic
+./shell/mkfont cmmib10 # bold math italic
+./shell/mkfont cmbsy10 # bold math symbols
+./shell/mkfont cmcsc10 # caps and small caps
+./shell/mkfont cmssbx10 # sans serif bold extended
+./shell/mkfont cmdunh10 # Dunhill style
+./shell/mkfont manfnt # METAFONT logo and dragon curve and special symbols

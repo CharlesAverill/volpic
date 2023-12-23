@@ -1,0 +1,2 @@
+mkdir TeXfonts
+./MFT/plainfonts
