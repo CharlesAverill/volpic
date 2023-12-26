@@ -42,7 +42,7 @@ debug: build
 
 DOCS_PATH=docs/
 DOCS_NAME=vp_lifter
-DOCS_DESCR=Lifter for the VOLPIC Pascal verification system
+DOCS_DESCR=Lifter for the VOLPIC Pascal verifier system
 DOCS_INDEX_TITLE=$(DOCS_NAME) - $(DOCS_DESCR)
 define DOCS_EMBED
 <meta content="$(DOCS_NAME)" property="og:title" />\
