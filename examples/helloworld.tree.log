@@ -1,0 +1,619 @@
+
+*******************************************************************************
+after parsing
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+   (statementn, resultdef = <nil>, pos = (7,11), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+      (assignn, resultdef = $void = "untyped", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 2
+         (loadn, resultdef = LongWord = "DWord", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_write], cmplx = 1
+            nil
+            symbol = X
+         )
+         (ordconstn, resultdef = LongWord = "DWord", pos = (7,10), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            value = 5
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (8,15), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (nothingn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (tempcreaten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+               size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F8392C0
+               [ti_may_be_in_reg]
+               tempinit =
+               nil
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (assignn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_write], cmplx = 1
+                  temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+               )
+               (typeconvn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                  (calln, resultdef = PText = "^Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+                     proc = $fpc_get_output:^Text;
+                  )
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               proc = $fpc_write_text_uint(LongInt;var Text;QWord);
+               left =
+               (callparan, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 3
+                  (typeconvn, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 2, convtype = tc_int_2_int, convnodeflags = []
+                     (loadn, resultdef = LongWord = "DWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                        nil
+                        symbol = X
+                     )
+                  )
+
+               )
+               (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+               (callparan, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (ordconstn, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+                     value = 0
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               proc = $fpc_writeln_end(var Text);
+               left =
+               (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            (tempdeleten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+               release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F8392C0
+            )
+
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (9,28), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (nothingn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (tempcreaten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+               size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F839340
+               [ti_may_be_in_reg]
+               tempinit =
+               nil
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (assignn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_write], cmplx = 1
+                  temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+               )
+               (typeconvn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                  (calln, resultdef = PText = "^Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+                     proc = $fpc_get_output:^Text;
+                  )
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               proc = $fpc_write_text_shortstr(LongInt;var Text;const ShortString);
+               left =
+               (callparan, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (stringconstn, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  )
+
+               )
+               (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+               (callparan, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (ordconstn, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+                     value = 0
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 255
+               proc = $fpc_writeln_end(var Text);
+               left =
+               (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            (tempdeleten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+               release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F839340
+            )
+
+         )
+      )
+
+   )
+)
+
+*******************************************************************************
+after the firstpass
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 255
+   (statementn, resultdef = <nil>, pos = (7,11), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (assignn, resultdef = $void = "untyped", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 2
+         (loadn, resultdef = LongWord = "DWord", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+            nil
+            symbol = X
+         )
+         (ordconstn, resultdef = LongWord = "DWord", pos = (7,10), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+            value = 5
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (8,15), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (nothingn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (tempcreaten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+               size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F8392C0
+               [ti_may_be_in_reg]
+               tempinit =
+               nil
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (assignn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done,nf_write], cmplx = 1
+                  temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+               )
+               (typeconvn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                  (calln, resultdef = PText = "^Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_get_output:^Text;
+                  )
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               proc = $fpc_write_text_uint(LongInt;var Text;QWord);
+               left =
+               (callparan, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REG, flags = [], cmplx = 3
+                  (typeconvn, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 2, convtype = tc_int_2_int, convnodeflags = []
+                     (loadn, resultdef = LongWord = "DWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                        nil
+                        symbol = X
+                     )
+                  )
+
+               )
+               (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+               (callparan, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [], cmplx = 1
+                  (ordconstn, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                     value = 0
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               proc = $fpc_writeln_end(var Text);
+               left =
+               (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 0
+            (tempdeleten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+               release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F8392C0
+            )
+
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (9,28), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (nothingn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (tempcreaten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+               size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F839340
+               [ti_may_be_in_reg]
+               tempinit =
+               nil
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (assignn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done,nf_write], cmplx = 1
+                  temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+               )
+               (typeconvn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                  (calln, resultdef = PText = "^Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_get_output:^Text;
+                  )
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               proc = $fpc_write_text_shortstr(LongInt;var Text;const ShortString);
+               left =
+               (callparan, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_CREF, flags = [], cmplx = 1
+                  (stringconstn, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_CREF, flags = [nf_pass1_done], cmplx = 1
+                  )
+
+               )
+               (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+               (callparan, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [], cmplx = 1
+                  (ordconstn, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                     value = 0
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               proc = $fpc_writeln_end(var Text);
+               left =
+               (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                  (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                     (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                        (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                           temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                        )
+                     )
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 0
+            (tempdeleten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+               release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F839340
+            )
+
+         )
+      )
+
+   )
+)
+
+*******************************************************************************
+right before code generation
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (nothingn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (6,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 255
+         (statementn, resultdef = <nil>, pos = (7,11), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (assignn, resultdef = $void = "untyped", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 2
+               (loadn, resultdef = LongWord = "DWord", pos = (7,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+                  nil
+                  symbol = X
+               )
+               (ordconstn, resultdef = LongWord = "DWord", pos = (7,10), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                  value = 5
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (8,15), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (blockn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (nothingn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (tempcreaten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                     size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F8392C0
+                     [ti_may_be_in_reg]
+                     tempinit =
+                     nil
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (assignn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done,nf_write], cmplx = 1
+                        temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                     )
+                     (typeconvn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                        (calln, resultdef = PText = "^Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255
+                           proc = $fpc_get_output:^Text;
+                        )
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_write_text_uint(LongInt;var Text;QWord);
+                     left =
+                     (callparan, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REG, flags = [], cmplx = 3
+                        (typeconvn, resultdef = QWord = "QWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 2, convtype = tc_int_2_int, convnodeflags = []
+                           (loadn, resultdef = LongWord = "DWord", pos = (8,14), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                              nil
+                              symbol = X
+                           )
+                        )
+
+                     )
+                     (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                        (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                           (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                              (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                                 temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                              )
+                           )
+                        )
+
+                     )
+                     (callparan, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [], cmplx = 1
+                        (ordconstn, resultdef = LongInt = "LongInt", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                           value = 0
+                        )
+
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (calln, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_writeln_end(var Text);
+                     left =
+                     (callparan, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                        (typeconvn, resultdef = Text = "Text", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                           (derefn, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                              (temprefn, resultdef = Pointer = "^untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                                 temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F8392C0 flags = [ti_may_be_in_reg])
+                              )
+                           )
+                        )
+
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 0
+                  (tempdeleten, resultdef = $void = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                     release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F8392C0
+                  )
+
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,28), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+            (blockn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (nothingn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (tempcreaten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                     size = 8, temptypedef = Pointer = "^untyped", tempinfo = $00007F8F9F839340
+                     [ti_may_be_in_reg]
+                     tempinit =
+                     nil
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (assignn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done,nf_write], cmplx = 1
+                        temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                     )
+                     (typeconvn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255, convtype = tc_equal, convnodeflags = []
+                        (calln, resultdef = PText = "^Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 255
+                           proc = $fpc_get_output:^Text;
+                        )
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_write_text_shortstr(LongInt;var Text;const ShortString);
+                     left =
+                     (callparan, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_CREF, flags = [], cmplx = 1
+                        (stringconstn, resultdef = ShortString = "ShortString", pos = (9,27), loc = LOC_INVALID, expectloc = LOC_CREF, flags = [nf_pass1_done], cmplx = 1
+                        )
+
+                     )
+                     (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                        (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                           (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                              (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                                 temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                              )
+                           )
+                        )
+
+                     )
+                     (callparan, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [], cmplx = 1
+                        (ordconstn, resultdef = LongInt = "LongInt", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                           value = 0
+                        )
+
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+                  (calln, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+                     proc = $fpc_writeln_end(var Text);
+                     left =
+                     (callparan, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [], cmplx = 1
+                        (typeconvn, resultdef = Text = "Text", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_explicit,nf_internal], cmplx = 1, convtype = tc_equal, convnodeflags = []
+                           (derefn, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                              (temprefn, resultdef = Pointer = "^untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_CREG, flags = [nf_pass1_done], cmplx = 1
+                                 temptypedef = Pointer = "^untyped", (tempinfo = $00007F8F9F839340 flags = [ti_may_be_in_reg])
+                              )
+                           )
+                        )
+
+                     )
+                  )
+
+               )
+               (statementn, resultdef = <nil>, pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 0
+                  (tempdeleten, resultdef = $void = "untyped", pos = (9,5), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+                     release_to_normal: FALSE, temptypedef = Pointer = "^untyped", temptype = tt_persistent, tempinfo = $00007F8F9F839340
+                  )
+
+               )
+            )
+
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+)

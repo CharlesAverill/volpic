@@ -1,0 +1,80 @@
+
+*******************************************************************************
+after parsing
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+   (callparan, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+      (ordconstn, resultdef = LongInt = "untyped", pos = (8,5), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+         value = 0
+      )
+   )
+)
+
+*******************************************************************************
+after the firstpass
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 0
+   nil
+)
+
+*******************************************************************************
+right before code generation
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (nothingn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (3,6), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (5,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+)

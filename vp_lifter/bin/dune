@@ -1,0 +1,4 @@
+(executable
+ (public_name vp_lifter)
+ (name main)
+ (libraries vp_lifter vp_lifter.lang))

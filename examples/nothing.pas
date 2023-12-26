@@ -1,0 +1,5 @@
+program Nothing;
+
+begin
+
+end.

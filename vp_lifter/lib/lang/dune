@@ -1,0 +1,5 @@
+(library
+ (name lang)
+ (public_name vp_lifter.lang)
+ (modules read_tree input lexer parser)
+ (libraries str vp_lifter))

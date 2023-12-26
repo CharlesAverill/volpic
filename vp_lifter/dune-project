@@ -1,0 +1,23 @@
+(lang dune 3.9)
+
+(name vp_lifter)
+
+(generate_opam_files true)
+
+(source
+ (github CharlesAverill/vp_lifter))
+
+(authors "Charles Averill")
+
+(maintainers "Charles Averill")
+
+(license LICENSE)
+
+(documentation https://github.com/CharlesAverill/vp_lifter)
+
+(package
+ (name vp_lifter)
+ (synopsis "Lifter for the VOLPLIC Pascal verification system")
+ (description "Lifter for the VOLPIC Pascal verification system")
+ (depends ocaml dune graphics))
+

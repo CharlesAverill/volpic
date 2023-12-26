@@ -1,0 +1,16 @@
+tex-fpc
+tex-mf-fpc
+_build
+
+*~
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+_build
+parser.output
