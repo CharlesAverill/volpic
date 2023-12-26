@@ -33,6 +33,10 @@ paradoxically vastly easier to read than menhir's. Some of the grammar is
 context-sensitive, which I will have to delay to a custom parser later in the 
 pipeline.
 
+Parser has hit first milestone: I can parse a standard "Hello World" with an assignment
+as well as an empty program. Next step: parsing mf and tex. After that, I can start
+lifting into Gallina.
+
 # Extraction
 
 # Correctness
