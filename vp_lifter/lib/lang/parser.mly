@@ -2,25 +2,29 @@
     open Vp_lifter.Parse_tree
 %}
 
-%token BLOCKN NOTHINGN STATEMENTN CALLN ASSIGNN LOADN ORDCONSTN VECN TEMPCREATEN TEMPREFN TYPECONVN CALLPARAN DEREFN TEMPDELETEN STRINGCONSTN
+%token BLOCKN NOTHINGN STATEMENTN CALLN ASSIGNN LOADN ORDCONSTN VECN TEMPCREATEN 
+    TEMPREFN TYPECONVN CALLPARAN DEREFN TEMPDELETEN STRINGCONSTN FORN WHILEN MULN
+    SUBN SUBSCRIPTN IFN UNEQUALN
 %token <string> IDENTIFIER
 %token <string> STRING
-%token <string> HEX
 %token <int>    NUMBER
+%token <string> HEX
 
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_BRACE RIGHT_BRACE
-%token COLON COMMA EQUALS DOLLAR CARROT SEMICOLON
-%token NIL RESULTDEF POS LOC EXPECTLOC FLAGS CMPLX NILBRACKETS VAR CONST
+%token COMMA EQUALS DOLLAR CARROT SEMICOLON NEWLINE COLON DOT
+%token NIL RESULTDEF POS LOC EXPECTLOC FLAGS CMPLX NILBRACKETS VAR CONST NOTYPESYM
+    LEFT TEMPINIT
 %token EOF
 
 %start main
 %type <Vp_lifter.Parse_tree.parse_tree_node list> main node_list
-%type <Vp_lifter.Parse_tree.parse_tree_node> node
+%type <Vp_lifter.Parse_tree.parse_tree_node option> node
 %type <Vp_lifter.Parse_tree.parse_tree_node_type> node_type
-%type <string> resultdef typestrptr qualified_type typestr
+%type <string> resultdef typestrptr qualified_type typestr ptypestr label
 %type <Vp_lifter.Parse_tree.flag list> flags flags_list
-%type <(string * Vp_lifter.Parse_tree.pt_vtype) list> data_list data_seq
+%type <(string * Vp_lifter.Parse_tree.pt_vtype) list> data_list data_seq nonempty_list(data)
 %type <Vp_lifter.Parse_tree.pt_vtype> data_val
+%type <(string * Vp_lifter.Parse_tree.pt_vtype) list * Vp_lifter.Parse_tree.parse_tree_node list> node_data_list
 %type <(string * Vp_lifter.Parse_tree.pt_vtype)> data individual_data
 %type <(string * Vp_lifter.Parse_tree.optional) list> optional_list optionals
 %type <((string * Vp_lifter.Parse_tree.optional) list) option> option(optionals)
@@ -31,39 +35,46 @@
 
 main :
       EOF  { [] }
-    | node { [$1] }
+    | node { match $1 with None -> [] | Some n -> [n] }
 
 node_list : { [] }
-    | node node_list { $1 :: $2 }
+    | node node_list { match $1 with None -> $2 | Some n -> n :: $2 }
 
 node :
+    label NIL { None } |
+    label = label 
     LEFT_PARENTHESIS 
-        node_type COMMA
-        resultdef COMMA
-        POS EQUALS LEFT_PARENTHESIS NUMBER COMMA NUMBER RIGHT_PARENTHESIS COMMA
-        LOC EQUALS IDENTIFIER COMMA
-        EXPECTLOC EQUALS IDENTIFIER COMMA
-        FLAGS EQUALS flags COMMA
-        CMPLX EQUALS NUMBER
-        optionals?
-        data_list
-        node_list
+        nt = node_type COMMA
+        rd = resultdef COMMA
+        POS EQUALS LEFT_PARENTHESIS ln = NUMBER COMMA cn = NUMBER RIGHT_PARENTHESIS COMMA
+        LOC EQUALS loc = IDENTIFIER COMMA
+        EXPECTLOC EQUALS eloc = IDENTIFIER COMMA
+        FLAGS EQUALS flags = flags COMMA
+        CMPLX EQUALS cmplx = NUMBER
+        opts = optionals?
+        ndl = node_data_list
     RIGHT_PARENTHESIS  
     {   
-        (* let o = match $29 with None -> [] | Some l -> l in *)
-        { 
-            pt_type = $2;
-            resultdef = return_type_of_string $4;
-            pos = ($9, $11);
-            loc = loc_of_string $16;
-            expectloc = loc_of_string $20;
-            flags = $24;
-            cmplx = $28;
-            optionals = [];
-            data = $30;
-            children = $31;
+        Some { 
+            pt_type = nt;
+            label = label;
+            resultdef = return_type_of_string rd;
+            pos = (ln, cn);
+            loc = loc_of_string loc;
+            expectloc = loc_of_string eloc;
+            flags = flags;
+            cmplx = cmplx;
+            optionals = (match opts with None -> [] | Some l -> l);
+            data = fst ndl;
+            children = snd ndl;
         }
     }
+
+node_data_list : node_list data_list { ($2, $1) } | data_list node_list { ($1, $2) }
+
+label : { "" }
+    | LEFT EQUALS { "left" }
+    | TEMPINIT EQUALS { "tempinit" }
 
 optionals : COMMA optional_list { $2 }
 optional_list : 
@@ -92,6 +103,13 @@ node_type :
     | DEREFN        { Deref }
     | TEMPDELETEN   { Tempdelete }
     | STRINGCONSTN  { Stringconst }
+    | FORN          { For }
+    | WHILEN        { While }
+    | MULN          { Mul }
+    | SUBN          { Sub }
+    | SUBSCRIPTN    { Subscript }
+    | IFN           { If }
+    | UNEQUALN      { Unequal }
 
 resultdef :
       RESULTDEF EQUALS IDENTIFIER           { $3 }
@@ -108,8 +126,7 @@ flags_list :
     | IDENTIFIER COMMA flags_list   { (flag_of_string $1) :: $3 }
 
 data_list : { [] }
-    | NIL data_list         { $2 }
-    | data data_list        { $1 :: $2 }
+    | nonempty_list(data)    { $1 }
 
 data:
     individual_data                 { $1 }
@@ -117,17 +134,19 @@ data:
 
 individual_data :
       IDENTIFIER EQUALS data_val  { ($1, $3) }
-    | IDENTIFIER COLON IDENTIFIER   { ($1, String $3) }
+    | IDENTIFIER COLON IDENTIFIER   { ($1, Str $3) }
     | IDENTIFIER EQUALS             { ($1, Blank) }
     | FLAGS EQUALS flags            { ("flags", Flags $3) }
     | flags                         { ("nolabel_flags", Flags $1) }
 
 data_val :
-      IDENTIFIER    { String $1 }
+      IDENTIFIER    { Str $1 }
     | NUMBER        { Integer $1 }
-    | IDENTIFIER EQUALS STRING  { String $3 }
-    | DOLLAR IDENTIFIER COLON typestr SEMICOLON { String ("$" ^ $2 ^ ":" ^ $4) }
-    | DOLLAR IDENTIFIER typestr SEMICOLON { String $3 }
+    | IDENTIFIER EQUALS STRING  { Str $3 }
+    | DOLLAR IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $2 ^ ":" ^ $4) }
+    | DOLLAR IDENTIFIER ptypestr SEMICOLON { Str $3 }
+    | IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $1 ^ ":" ^ $3) }
+    | IDENTIFIER ptypestr SEMICOLON { Str $2 }
     | DOLLAR HEX        { Integer (int_of_string ("0x" ^ (Str.string_after $2 1))) }
 
 data_seq :
@@ -136,8 +155,12 @@ data_seq :
     | LEFT_PARENTHESIS data_list RIGHT_PARENTHESIS { $2 }
 
 typestr :
-      qualified_type         { $1 }
-    | LEFT_PARENTHESIS separated_list(SEMICOLON, qualified_type) RIGHT_PARENTHESIS { String.concat ";" $2 }
+        qualified_type      { $1 }
+      | ptypestr            { $1 }
+      | NOTYPESYM           { "" }
+      | typestr DOT typestr { $1 ^ "." ^ $3 }
+
+ptypestr : LEFT_PARENTHESIS separated_list(SEMICOLON, qualified_type) RIGHT_PARENTHESIS { String.concat ";" $2 }
 
 qualified_type :
       typestrptr        { $1 }

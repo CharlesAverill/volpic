@@ -14,6 +14,13 @@ type parse_tree_node_type =
   | Deref
   | Tempdelete
   | Stringconst
+  | For
+  | While
+  | Mul
+  | Sub
+  | Subscript
+  | If
+  | Unequal
 
 let string_of_parse_tree_type = function
   | Nothing ->
@@ -46,22 +53,81 @@ let string_of_parse_tree_type = function
       "tempdeleten"
   | Stringconst ->
       "stringconstn"
+  | For ->
+      "forn"
+  | While ->
+      "whilen"
+  | Mul ->
+      "muln"
+  | Sub ->
+      "subn"
+  | Subscript ->
+      "subscript"
+  | If ->
+      "ifn"
+  | Unequal ->
+      "unequaln"
 
-type return_type =
+type range = Unbounded | Range of (int * int)
+
+let string_of_range = function
+  | Unbounded ->
+      ""
+  | Range (a, b) ->
+      "[" ^ string_of_int a ^ ".." ^ string_of_int b ^ "]"
+
+let string_before_substr str sub =
+  Str.string_before str (Str.search_forward (Str.regexp_string sub) str 0)
+
+let string_after_substr str sub =
+  Str.string_after str
+    ( Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
+    + String.length sub )
+
+let range_of_string s =
+  if s = "" then Unbounded
+  else
+    let s' = string_after_substr (string_before_substr s "]") "[" in
+    let dd_pos = Str.search_forward (Str.regexp_string "..") s' 0 in
+    Range
+      ( int_of_string (Str.string_before s' dd_pos)
+      , int_of_string (Str.string_after s' (dd_pos + 2)) )
+
+type return_type_root =
   | Nil
-  | Pointer of return_type
+  | Pointer of return_type_root
   | Untyped
   | Dword
   | Qword
   | Text
   | LongInt
   | ShortString
+  | ShortInt
+  | Char
+  | Int64
+  | ASCIIcode
+  | Byte
+  | Boolean
+  | SmallInt
+  | Twohalves
+  | Record
+  | Word
+  | SmallNumber
+  | StrNumber
+  | String
+  | MemoryWord
+  | QuarterWord
+  | HalfWord
+  | Array of (bool * range * return_type_root)
+  | Procedure of (string * return_type list)
 
-let rec string_of_return_type = function
+and return_type = RT of return_type_root | Const of return_type_root
+
+let rec string_of_return_type_root = function
   | Nil ->
       "nil"
   | Pointer rt' ->
-      "^" ^ string_of_return_type rt'
+      "^" ^ string_of_return_type (RT rt')
   | Untyped ->
       "untyped"
   | Dword ->
@@ -74,12 +140,77 @@ let rec string_of_return_type = function
       "LongInt"
   | ShortString ->
       "ShortString"
+  | ShortInt ->
+      "ShortInt"
+  | Char ->
+      "Char"
+  | Int64 ->
+      "Int64"
+  | ASCIIcode ->
+      "ASCIIcode"
+  | Byte ->
+      "Byte"
+  | Boolean ->
+      "Boolean"
+  | SmallInt ->
+      "SmallInt"
+  | Twohalves ->
+      "twohalves"
+  | Record ->
+      "<record type>"
+  | Word ->
+      "Word"
+  | SmallNumber ->
+      "smallnumber"
+  | StrNumber ->
+      "strnumber"
+  | String ->
+      "String"
+  | MemoryWord ->
+      "memoryword"
+  | QuarterWord ->
+      "quarterword"
+  | HalfWord ->
+      "halfword"
+  | Array (bp, r, rt) ->
+      (if bp then "BitPacked " else "")
+      ^ "Array" ^ string_of_range r ^ " Of "
+      ^ string_of_return_type (RT rt)
+  | Procedure (id, args) ->
+      id ^ "(" ^ String.concat ";" (List.map string_of_return_type args) ^ ")"
 
-let rec return_type_of_string s =
+and string_of_return_type : return_type -> string = function
+  | RT rt ->
+      string_of_return_type_root rt
+  | Const rt ->
+      "Constant " ^ string_of_return_type_root rt
+
+let contains s1 s2 =
+  let re = Str.regexp_string s2 in
+  try
+    ignore (Str.search_forward re s1 0) ;
+    true
+  with Not_found -> false
+
+let rec return_type_root_of_string s =
+  let bp = String.starts_with ~prefix:"BitPacked" s in
   if String.get s 0 = '^' then
-    Pointer (return_type_of_string (String.sub s 1 (String.length s - 1)))
+    Pointer (return_type_root_of_string (String.sub s 1 (String.length s - 1)))
+  else if bp || String.starts_with ~prefix:"Array" s then
+    Array
+      ( bp
+      , range_of_string s
+      , return_type_root_of_string
+          (Str.string_after s
+             (Str.search_backward (Str.regexp_string " ") s
+                (String.length s - 1) ) ) )
+  else if contains s "(" then
+    Procedure
+      ( string_before_substr s "("
+      , [ return_type_of_string
+            (string_after_substr (string_before_substr s ")") "(") ] )
   else
-    match String.lowercase_ascii s with
+    match String.trim (String.lowercase_ascii s) with
     | "<nil>" ->
         Nil
     | "untyped" ->
@@ -94,8 +225,45 @@ let rec return_type_of_string s =
         LongInt
     | "shortstring" ->
         ShortString
+    | "shortint" ->
+        ShortInt
+    | "char" ->
+        Char
+    | "int64" ->
+        Int64
+    | "asciicode" ->
+        ASCIIcode
+    | "byte" ->
+        Byte
+    | "boolean" ->
+        Boolean
+    | "smallint" ->
+        SmallInt
+    | "twohalves" ->
+        Twohalves
+    | "<record type>" ->
+        Record
+    | "word" ->
+        Word
+    | "smallnumber" ->
+        SmallNumber
+    | "strnumber" ->
+        StrNumber
+    | "string" ->
+        String
+    | "memoryword" ->
+        MemoryWord
+    | "quarterword" ->
+        QuarterWord
+    | "halfword" ->
+        HalfWord
     | _ ->
         failwith ("Unknown return type " ^ s)
+
+and return_type_of_string s =
+  if String.starts_with ~prefix:"Constant " s then
+    Const (return_type_root_of_string (string_after_substr s "Constant "))
+  else RT (return_type_root_of_string s)
 
 type loc = Loc_invalid
 
@@ -108,7 +276,12 @@ let loc_of_string s =
   | _ ->
       failwith ("Unknown loc " ^ s)
 
-type flag = Nf_explicit | Nf_internal | Nf_write | Ti_may_be_in_reg
+type flag =
+  | Nf_explicit
+  | Nf_internal
+  | Nf_write
+  | Nf_callunique
+  | Ti_may_be_in_reg
 
 let string_of_flag = function
   | Nf_explicit ->
@@ -119,6 +292,8 @@ let string_of_flag = function
       "nf_write"
   | Ti_may_be_in_reg ->
       "ti_may_be_in_reg"
+  | Nf_callunique ->
+      "nf_callunique"
 
 let string_of_flags f =
   "[" ^ String.concat "," (List.map string_of_flag f) ^ "]"
@@ -133,13 +308,15 @@ let flag_of_string s =
       Ti_may_be_in_reg
   | "nf_write" ->
       Nf_write
+  | "nf_callunique" ->
+      Nf_callunique
   | _ ->
       failwith ("Unknown flag " ^ s)
 
 type pt_vtype =
   | Blank
   | Integer of int
-  | String of string
+  | Str of string
   | List of (string * pt_vtype) list
   | Flags of flag list
 
@@ -148,7 +325,7 @@ let rec string_of_vtype = function
       ""
   | Integer i ->
       string_of_int i
-  | String s ->
+  | Str s ->
       s
   | List l ->
       Printf.sprintf "[%s]"
@@ -176,6 +353,7 @@ let string_of_optional = function
 
 type parse_tree_node =
   { pt_type: parse_tree_node_type
+  ; label: string
   ; resultdef: return_type
   ; pos: int * int
   ; loc: loc
@@ -190,8 +368,9 @@ let rec strn s = function 0 -> "" | n -> s ^ strn s (n - 1)
 
 let rec _string_of_parse_tree indent_lvl t =
   Printf.sprintf
-    "(%s, resultdef = %s, pos = (%d, %d), loc = %s, expectloc = %s, flags = \
+    "%s(%s, resultdef = %s, pos = (%d, %d), loc = %s, expectloc = %s, flags = \
      %s, cmplx = %d%s%s%s%s%s)"
+    (if t.label <> "" then t.label ^ " = " else "")
     (string_of_parse_tree_type t.pt_type)
     (string_of_return_type t.resultdef)
     (fst t.pos) (snd t.pos) (string_of_loc t.loc)

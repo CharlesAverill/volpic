@@ -4,9 +4,9 @@
     exception UnexpectedCharacter
 }
 
-let ident = ['A'-'Z' 'a'-'z' '_'] (['A'-'Z' 'a'-'z' '0'-'9' '_'])* 
+let ident = ['A'-'Z' 'a'-'z' '_'] (['A'-'Z' 'a'-'z' '0'-'9' '_' '$'])* 
 let digit = ['0'-'9']
-let number = digit+
+let number = ['-']? digit+
 let hex = (['A'-'F' 'a'-'f' '0'-'9'])*
 let non_comma = (['\032' - '\126'] # [','])*
 
@@ -22,6 +22,7 @@ rule token = parse
     | '$'                           { DOLLAR }
     | '^'                           { CARROT }
     | ';'                           { SEMICOLON }
+    | '.'                           { DOT }
     | "blockn"                      { BLOCKN }
     | "nothingn"                    { NOTHINGN }
     | "statementn"                  { STATEMENTN }
@@ -37,9 +38,17 @@ rule token = parse
     | "derefn"                      { DEREFN }
     | "tempdeleten"                 { TEMPDELETEN }
     | "stringconstn"                { STRINGCONSTN }
+    | "forn"                        { FORN }
+    | "whilen"                      { WHILEN }
+    | "muln"                        { MULN }
+    | "subn"                        { SUBN }
+    | "subscriptn"                  { SUBSCRIPTN }
+    | "ifn"                         { IFN }
+    | "unequaln"                    { UNEQUALN }
     | "pos"                         { POS }
     | "nil"                         { NIL }
     | "<nil>"                       { NILBRACKETS }
+    | "<no type symbol>"            { NOTYPESYM }
     | "resultdef"                   { RESULTDEF }
     | "loc"                         { LOC }
     | "expectloc"                   { EXPECTLOC }
@@ -47,7 +56,10 @@ rule token = parse
     | "cmplx"                       { CMPLX }
     | "var"                         { VAR }
     | "const"                       { CONST }
-    | '\"' ((['\032' - '\126'] # ['\\' '"'])* as lxm) '\"'   
+    | "left"                        { LEFT }
+    | "tempinit"                    { TEMPINIT }
+    | '\n'                          { NEWLINE }
+    | '\"' ((['\032' - '\126'] # ['\\' '"'])* as lxm) '\"'
                                     { STRING (lxm) }
     | number as lxm                 { NUMBER (int_of_string lxm) }
     | ident                         { IDENTIFIER (lexeme lexbuf) }

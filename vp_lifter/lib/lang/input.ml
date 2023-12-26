@@ -9,15 +9,18 @@ let contents = ref ""
 let parse_error lexbuf =
   syntax_error
     ( if lexbuf.Lexing.lex_curr_pos == lexbuf.Lexing.lex_last_pos then
-        "Unexpected end of file, last read " ^ Lexing.lexeme lexbuf
+        let display_contents =
+          try
+            " -\n"
+            ^ String.sub !contents (max 0 (lexbuf.Lexing.lex_curr_pos - 60)) 60
+          with _ -> Lexing.lexeme lexbuf
+        in
+        "Unexpected end of file, last read " ^ display_contents
       else
         let display_contents =
           try
             " -\n"
-            ^ String.sub !contents
-                (max 0 (lexbuf.Lexing.lex_curr_pos - 30))
-                (max 60
-                   (String.length !contents - lexbuf.Lexing.lex_curr_pos - 1) )
+            ^ String.sub !contents (max 0 (lexbuf.Lexing.lex_curr_pos - 60)) 60
           with Invalid_argument _ -> ""
         in
         "Unexpected token '" ^ Lexing.lexeme lexbuf ^ "' at "
@@ -26,7 +29,15 @@ let parse_error lexbuf =
     (Lexing.lexeme_start_p lexbuf)
 
 let parse lexbuf =
-  try Parser.main Lexer.token lexbuf with _ -> parse_error lexbuf
+  try Parser.main Lexer.token lexbuf with
+  | Failure s ->
+      failwith s
+  | Not_found ->
+      failwith "String searching failed"
+  | Invalid_argument s ->
+      raise (Invalid_argument s)
+  | _ ->
+      parse_error lexbuf
 
 let parse_file fn =
   let lexbuf = Lexing.from_channel (open_in fn) in

@@ -37,6 +37,11 @@ Parser has hit first milestone: I can parse a standard "Hello World" with an ass
 as well as an empty program. Next step: parsing mf and tex. After that, I can start
 lifting into Gallina.
 
+Parser has parsed the ASTs for TeX and MF! The grammar has a number of conflicts
+and there are surely translation bugs but this is a huge milestone. Now that I
+have an OCaml program that can read Pascal programs, I can begin to export Gallina 
+code.
+
 # Extraction
 
 # Correctness

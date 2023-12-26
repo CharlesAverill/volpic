@@ -29,7 +29,18 @@ let process_line _line_number line_content =
   if contains line_content "firstpass" then done_reading := true
   else if all_chars_are_star line_content then in_header := not !in_header
   else if (not !in_header) && String.length (String.trim line_content) > 0 then
-    to_parse := String.concat "\n" [!to_parse; line_content]
+    (*
+      There's a line like this in my input:
+        proc = FpSignal(LongInt;signalhandler_t):<procedure variable type of procedure(LongInt);CDecl>;
+      it seems like <> are being used as comment delimiters, while everywhere else they're being used
+      as type braces. If "procedure vairable ..." was a type, I think it would be unnecessarily complex,
+      hence why I'm considering this as a comment. To simplify the parser, I'm going to strip it from the
+      input
+    *)
+    let replaced_line_content =
+      Str.global_replace (Str.regexp ":<.*>;") ";" line_content
+    in
+    to_parse := String.concat "\n" [!to_parse; replaced_line_content]
 
 let process_file fn =
   let in_channel = open_in fn in
