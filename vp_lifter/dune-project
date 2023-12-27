@@ -15,9 +15,11 @@
 
 (documentation https://github.com/CharlesAverill/vp_lifter)
 
+(using coq 0.8)
+
 (package
  (name vp_lifter)
  (synopsis "Lifter for the VOLPLIC Pascal verifier system")
  (description "Lifter for the VOLPIC Pascal verifier system")
- (depends ocaml dune graphics))
+ (depends ocaml dune))
 

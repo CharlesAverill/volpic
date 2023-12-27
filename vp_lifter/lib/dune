@@ -1,5 +1,11 @@
 (library
  (public_name vp_lifter)
  (name vp_lifter)
- (modules parse_tree logging)
- (libraries str))
+ (modules generator converter parse_tree logging)
+ (libraries
+  coq-core.sysinit
+  coq-core.kernel
+  coq-core.vernac
+  coq-core.interp
+  coq-core.gramlib
+  str))

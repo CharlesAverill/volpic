@@ -5,7 +5,7 @@ default: build
 
 parser_generator:
 	opam exec -- ocamllex lib/lang/lexer.mll
-	opam exec -- menhir --trace -v lib/lang/parser.mly
+	opam exec -- menhir -v lib/lang/parser.mly
 
 fmt: parser_generator
 	opam exec -- dune build @fmt

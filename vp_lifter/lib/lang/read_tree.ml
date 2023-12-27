@@ -60,5 +60,5 @@ let process_file fn =
 
 let read_tree fn =
   process_file fn ;
-  print_endline (String.trim !to_parse) ;
+  (* print_endline (String.trim !to_parse) ; *)
   parse_string (String.trim !to_parse ^ "\n") fn

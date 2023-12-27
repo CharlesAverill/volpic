@@ -5,13 +5,12 @@ description: "Lifter for the VOLPIC Pascal verifier system"
 maintainer: ["Charles Averill"]
 authors: ["Charles Averill"]
 license: "LICENSE"
-homepage: "https://github.com/CharlesAverill/volpic"
-doc: "https://github.com/CharlesAverill/volpic"
-bug-reports: "https://github.com/CharlesAverill/volpic/issues"
+homepage: "https://github.com/CharlesAverill/vp_lifter"
+doc: "https://github.com/CharlesAverill/vp_lifter"
+bug-reports: "https://github.com/CharlesAverill/vp_lifter/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.9"}
-  "graphics"
   "odoc" {with-doc}
 ]
 build: [
@@ -28,4 +27,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/CharlesAverill/volpic.git"
+dev-repo: "git+https://github.com/CharlesAverill/vp_lifter.git"
