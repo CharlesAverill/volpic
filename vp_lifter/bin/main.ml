@@ -5,5 +5,8 @@ open Vp_lifter.Converter
 
 let () =
   let parse_tree = List.hd (read_tree (List.nth (Array.to_list Sys.argv) 1)) in
-  (* print_endline (string_of_gallina (gallina_of_parse_tree parse_tree)) *)
-  converter_test ()
+  (* print_endline (string_of_parse_tree parse_tree) *)
+  let ast = gallina_of_parse_tree parse_tree in
+  print_endline (string_of_gallina ast)
+(* print_endline (string_of_gallina (gallina_of_parse_tree parse_tree)) *)
+(* converter_test () *)

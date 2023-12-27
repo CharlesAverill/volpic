@@ -351,6 +351,9 @@ let string_of_optional = function
   | OList l ->
       "[" ^ String.concat "," l ^ "]"
 
+let find_data (data : (string * pt_vtype) list) key =
+  snd (List.find (fun s -> fst s = key) data)
+
 type parse_tree_node =
   { pt_type: parse_tree_node_type
   ; label: string

@@ -14,3 +14,12 @@ _build
 *.cmxa
 _build
 parser.output
+.Makefile.d
+.*.aux
+*.vo
+*.vok
+*.vos
+*.glob
+theories/Makefile
+theories/Makefile.conf
+theories/.Makefile.d
