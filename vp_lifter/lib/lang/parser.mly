@@ -4,7 +4,7 @@
 
 %token BLOCKN NOTHINGN STATEMENTN CALLN ASSIGNN LOADN ORDCONSTN VECN TEMPCREATEN 
     TEMPREFN TYPECONVN CALLPARAN DEREFN TEMPDELETEN STRINGCONSTN FORN WHILEN MULN
-    SUBN SUBSCRIPTN IFN UNEQUALN
+    SUBN SUBSCRIPTN IFN UNEQUALN ADDN
 %token <string> IDENTIFIER
 %token <string> STRING
 %token <int>    NUMBER
@@ -110,6 +110,7 @@ node_type :
     | SUBSCRIPTN    { Subscript }
     | IFN           { If }
     | UNEQUALN      { Unequal }
+    | ADDN          { Add }
 
 resultdef :
       RESULTDEF EQUALS IDENTIFIER           { $3 }

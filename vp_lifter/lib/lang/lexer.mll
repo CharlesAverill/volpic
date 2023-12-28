@@ -42,6 +42,7 @@ rule token = parse
     | "whilen"                      { WHILEN }
     | "muln"                        { MULN }
     | "subn"                        { SUBN }
+    | "addn"                        { ADDN }
     | "subscriptn"                  { SUBSCRIPTN }
     | "ifn"                         { IFN }
     | "unequaln"                    { UNEQUALN }

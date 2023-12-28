@@ -21,6 +21,7 @@ type parse_tree_node_type =
   | Subscript
   | If
   | Unequal
+  | Add
 
 let string_of_parse_tree_type = function
   | Nothing ->
@@ -67,6 +68,8 @@ let string_of_parse_tree_type = function
       "ifn"
   | Unequal ->
       "unequaln"
+  | Add ->
+      "addn"
 
 type range = Unbounded | Range of (int * int)
 

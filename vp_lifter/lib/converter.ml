@@ -2,7 +2,7 @@ open Parse_tree
 
 type id_type = string
 
-type expr = Identifier of id_type | Integer of int
+type expr = Identifier of id_type | Integer of int | Add of expr * expr
 
 type stmt = Assignment of (id_type * expr)
 
@@ -18,11 +18,17 @@ let id_of_parse_tree parse_tree =
         ^ string_of_parse_tree_type parse_tree.pt_type
         ^ ", expected identifier node" )
 
-let expr_of_parse_tree parse_tree =
+let rec expr_of_parse_tree parse_tree =
   match parse_tree.pt_type with
   | Ordconst ->
       Integer
         (int_of_string (string_of_vtype (find_data parse_tree.data "value")))
+  | Load ->
+      Identifier (string_of_vtype (find_data parse_tree.data "symbol"))
+  | Add ->
+      Add
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | _ ->
       failwith
         ( string_of_parse_tree_type parse_tree.pt_type

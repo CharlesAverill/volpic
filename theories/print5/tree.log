@@ -1,0 +1,163 @@
+
+*******************************************************************************
+after parsing
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 6
+   (statementn, resultdef = <nil>, pos = (8,8), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 6
+      (assignn, resultdef = $void = "untyped", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 2
+         (loadn, resultdef = LongWord = "DWord", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_write], cmplx = 1
+            nil
+            symbol = Y
+         )
+         (ordconstn, resultdef = LongWord = "DWord", pos = (8,7), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 0
+            value = 6
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (9,12), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 4
+      (assignn, resultdef = $void = "untyped", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 4
+         (loadn, resultdef = LongWord = "DWord", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_write], cmplx = 1
+            nil
+            symbol = X
+         )
+         (addn, resultdef = LongWord = "DWord", pos = (9,9), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 2
+            (ordconstn, resultdef = LongWord = "DWord", pos = (9,7), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [nf_explicit], cmplx = 0
+               value = 5
+            )
+            (loadn, resultdef = LongWord = "DWord", pos = (9,11), loc = LOC_INVALID, expectloc = LOC_INVALID, flags = [], cmplx = 1
+               nil
+               symbol = Y
+            )
+         )
+      )
+
+   )
+)
+
+*******************************************************************************
+after the firstpass
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 6
+   (statementn, resultdef = <nil>, pos = (8,8), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 6
+      (assignn, resultdef = $void = "untyped", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 2
+         (loadn, resultdef = LongWord = "DWord", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+            nil
+            symbol = Y
+         )
+         (ordconstn, resultdef = LongWord = "DWord", pos = (8,7), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+            value = 6
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (9,12), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 4
+      (assignn, resultdef = $void = "untyped", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 4
+         (loadn, resultdef = LongWord = "DWord", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+            nil
+            symbol = X
+         )
+         (addn, resultdef = LongWord = "DWord", pos = (9,9), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 2
+            (ordconstn, resultdef = LongWord = "DWord", pos = (9,7), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done,nf_explicit], cmplx = 0
+               value = 5
+            )
+            (loadn, resultdef = LongWord = "DWord", pos = (9,11), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+               nil
+               symbol = Y
+            )
+         )
+      )
+
+   )
+)
+
+*******************************************************************************
+right before code generation
+$main; Register;
+*******************************************************************************
+(blockn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 255
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (nothingn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (7,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_usercode_entry], cmplx = 6
+         (statementn, resultdef = <nil>, pos = (8,8), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 6
+            (assignn, resultdef = $void = "untyped", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 2
+               (loadn, resultdef = LongWord = "DWord", pos = (8,2), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+                  nil
+                  symbol = Y
+               )
+               (ordconstn, resultdef = LongWord = "DWord", pos = (8,7), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done], cmplx = 0
+                  value = 6
+               )
+            )
+
+         )
+         (statementn, resultdef = <nil>, pos = (9,12), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 4
+            (assignn, resultdef = $void = "untyped", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 4
+               (loadn, resultdef = LongWord = "DWord", pos = (9,2), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done,nf_write], cmplx = 1
+                  nil
+                  symbol = X
+               )
+               (addn, resultdef = LongWord = "DWord", pos = (9,9), loc = LOC_INVALID, expectloc = LOC_REG, flags = [nf_pass1_done], cmplx = 2
+                  (ordconstn, resultdef = LongWord = "DWord", pos = (9,7), loc = LOC_INVALID, expectloc = LOC_CONST, flags = [nf_pass1_done,nf_explicit], cmplx = 0
+                     value = 5
+                  )
+                  (loadn, resultdef = LongWord = "DWord", pos = (9,11), loc = LOC_INVALID, expectloc = LOC_REF, flags = [nf_pass1_done], cmplx = 1
+                     nil
+                     symbol = Y
+                  )
+               )
+            )
+
+         )
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (blockn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done], cmplx = 0
+         nil
+      )
+
+   )
+   (statementn, resultdef = <nil>, pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [], cmplx = 255
+      (asmn, resultdef = $void = "untyped", pos = (10,1), loc = LOC_INVALID, expectloc = LOC_VOID, flags = [nf_pass1_done,nf_get_asm_position], cmplx = 255
+      )
+
+   )
+)

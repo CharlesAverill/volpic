@@ -1,7 +1,7 @@
 (library
  (public_name vp_lifter)
  (name vp_lifter)
- (modules generator converter parse_tree logging)
+ (modules generator converter string_utils parse_tree logging)
  (libraries
   coq-core.sysinit
   coq-core.kernel

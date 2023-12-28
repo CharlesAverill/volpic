@@ -1,14 +1,47 @@
 Require Import String.
+Require Import ZArith.
+Require Import List.
+Import ListNotations.
+Open Scope Z.
+Open Scope list_scope.
 
 Definition id_type := string.
 
 Inductive value : Type :=
-| Integer   (n : nat)
+| Null
+| Integer   (n : Z)
 | String    (s : string).
 
-Definition store := id_type -> option value.
+Definition store : Type := (list id_type * (id_type -> value)).
 
-Definition fresh_store : store := fun _ => None.
+Definition fresh_store : store := (nil, fun _ => Null).
+
+Definition ids : store -> list id_type := fst.
+Definition in_ids (VOLPIC_store : store) (s : id_type) :=
+    (fix f l := match l with 
+        | nil => false
+        | h :: t => if string_dec h s then true else f t
+        end) (ids VOLPIC_store).
+Definition all_in_ids (VOLPIC_store : store) (l : list id_type) :=
+    List.fold_left (
+        fun acc item => 
+            andb acc (in_ids VOLPIC_store item)
+    ) l true.
+
+Definition get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s.
+
+Definition get_int (VOLPIC_store : store) (s : id_type) :=
+    match get VOLPIC_store s with
+    | Integer n => n
+    | _ => 0
+    end.
+
+Definition get_string (VOLPIC_store : store) (s : id_type) :=
+    match get VOLPIC_store s with
+    | String s => s
+    | _ => EmptyString
+    end.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=
-    fun x => if string_dec x s then Some v else VOLPIC_store s.
+    (if in_ids VOLPIC_store s then (fst VOLPIC_store) else s :: (fst VOLPIC_store), 
+    fun x => if string_dec x s then v else (get VOLPIC_store s)).

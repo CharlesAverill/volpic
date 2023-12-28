@@ -2,7 +2,9 @@ program Print5;
 
 var
 	x: cardinal;
+	y: cardinal;
 
 begin
-	x := 5;
+	y := 6;
+	x := 5 + y;
 end.
