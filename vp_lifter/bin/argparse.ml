@@ -1,15 +1,30 @@
+let extract_lang_of_string s =
+  match String.lowercase_ascii s with
+  | "ocaml" | "ml" ->
+      "OCaml"
+  | "haskell" | "hs" ->
+      "Haskell"
+  | _ ->
+      failwith ("Unrecognized extraction language \"" ^ s ^ "\"")
+
 type arguments =
   { fpc_flags: string
   ; input_fn: string
   ; output_fn: string
   ; tree_log: string
-  ; do_compile: bool }
+  ; do_compile: bool
+  ; do_extract: bool
+  ; extract_language: string
+  ; extract_path: string }
 
 let parse_arguments () =
   let files = ref [] in
   let fpc_flags = ref "" in
   let tree_log = ref "tree.log" in
   let do_compile = ref true in
+  let do_extract = ref false in
+  let extract_lang = ref "" in
+  let extract_fp = ref "" in
   let speclist =
     Arg.
       [ ( "-fpc-flags"
@@ -21,7 +36,17 @@ let parse_arguments () =
               do_compile := false ;
               tree_log := s )
         , "Uses a provided tree.log file instead of calling fpc. If empty, \
-           will look for [basename].tree.log" ) ]
+           will look for [basename].tree.log" )
+      ; ( "-extract"
+        , Arg.String
+            (fun s ->
+              do_extract := true ;
+              extract_lang := extract_lang_of_string s )
+        , "Generates extraction commands for the following languages: {OCaml, \
+           Haskell}" )
+      ; ( "-extract-path"
+        , Arg.Set_string extract_fp
+        , "Path of extracted file relative to generated Coq file" ) ]
   in
   let usage_msg = "Usage: vp_lifter <INPUT> <OUTPUT>? [options]" in
   Arg.parse speclist (fun n -> files := n :: !files) usage_msg ;
@@ -47,4 +72,7 @@ let parse_arguments () =
       ( if !tree_log = "" then
           String.concat "" [Filename.remove_extension input_fn; ".tree.log"]
         else !tree_log )
-  ; do_compile= !do_compile }
+  ; do_compile= !do_compile
+  ; do_extract= !do_extract
+  ; extract_language= !extract_lang
+  ; extract_path= !extract_fp }

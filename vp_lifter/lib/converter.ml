@@ -2,9 +2,18 @@ open Parse_tree
 
 type id_type = string
 
-type expr = Identifier of id_type | Integer of int | Add of expr * expr
+type expr =
+  | Nothing
+  | Identifier of id_type
+  | Integer of int
+  | Add of expr * expr
+  | ProcCall of (id_type * expr list)
 
-type stmt = Assignment of (id_type * expr)
+type stmt =
+  | Nothing
+  | Assignment of (id_type * expr)
+  | Sequence of stmt list
+  | SideEffect of expr
 
 type gallina = Sequence of gallina list | Statement of stmt
 
@@ -29,17 +38,53 @@ let rec expr_of_parse_tree parse_tree =
       Add
         ( expr_of_parse_tree (List.hd parse_tree.children)
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Typeconv ->
+      expr_of_parse_tree (List.hd parse_tree.children)
+  | Call ->
+      ProcCall
+        ( string_of_vtype (find_data parse_tree.data "proc")
+        , find_parans parse_tree.children )
+  | Callpara ->
+      List.hd (find_parans [parse_tree])
+  | Deref ->
+      Nothing
   | _ ->
       failwith
         ( string_of_parse_tree_type parse_tree.pt_type
         ^ " not yet supported for expression parsing" )
 
-let stmt_of_parse_tree parse_tree =
+and find_parans l =
+  List.map
+    (fun x ->
+      match x.pt_type with
+      | Callpara ->
+          expr_of_parse_tree (List.hd x.children)
+      | _ ->
+          failwith
+            ( string_of_parse_tree_type x.pt_type
+            ^ " not yet supported for function argument parsing" ) )
+    l
+
+let rec stmt_of_parse_tree parse_tree =
   match parse_tree.pt_type with
   | Assignment ->
-      Assignment
-        ( id_of_parse_tree (List.hd parse_tree.children)
-        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+      if (List.hd parse_tree.children).pt_type = Tempref then Nothing
+      else
+        Assignment
+          ( id_of_parse_tree (List.hd parse_tree.children)
+          , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Block ->
+      Sequence (List.map stmt_of_parse_tree parse_tree.children)
+  | Statement ->
+      stmt_of_parse_tree (List.hd parse_tree.children)
+  | Nothing | Tempcreate | Tempdelete ->
+      Nothing
+  | Call ->
+      print_endline (string_of_parse_tree parse_tree) ;
+      SideEffect
+        (ProcCall
+           ( string_of_vtype (find_data parse_tree.data "proc")
+           , List.map expr_of_parse_tree parse_tree.children ) )
   | _ ->
       failwith
         ( string_of_parse_tree_type parse_tree.pt_type

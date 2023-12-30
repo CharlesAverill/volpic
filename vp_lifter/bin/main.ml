@@ -25,7 +25,10 @@ let () =
   let args = parse_arguments () in
   let parse_tree = get_parse_tree args.input_fn args in
   let gast = gallina_of_parse_tree parse_tree in
-  print_endline (string_of_gallina gast) ;
+  let out =
+    string_of_gallina gast args.input_fn args.do_extract args.extract_language
+      args.extract_path
+  in
+  print_endline out ;
   let oc = open_out args.output_fn in
-  Printf.fprintf oc "%s" (string_of_gallina gast) ;
-  close_out oc
+  Printf.fprintf oc "%s" out ; close_out oc

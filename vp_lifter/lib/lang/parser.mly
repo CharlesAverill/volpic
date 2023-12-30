@@ -145,7 +145,7 @@ data_val :
     | NUMBER        { Integer $1 }
     | IDENTIFIER EQUALS STRING  { Str $3 }
     | DOLLAR IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $2 ^ ":" ^ $4) }
-    | DOLLAR IDENTIFIER ptypestr SEMICOLON { Str $3 }
+    | DOLLAR IDENTIFIER ptypestr SEMICOLON { Str $2 }
     | IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $1 ^ ":" ^ $3) }
     | IDENTIFIER ptypestr SEMICOLON { Str $2 }
     | DOLLAR HEX        { Integer (int_of_string ("0x" ^ (Str.string_after $2 1))) }

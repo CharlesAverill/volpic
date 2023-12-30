@@ -1,3 +1,5 @@
+open String_utils
+
 type parse_tree_node_type =
   | Nothing
   | Block
@@ -187,13 +189,6 @@ and string_of_return_type : return_type -> string = function
       string_of_return_type_root rt
   | Const rt ->
       "Constant " ^ string_of_return_type_root rt
-
-let contains s1 s2 =
-  let re = Str.regexp_string s2 in
-  try
-    ignore (Str.search_forward re s1 0) ;
-    true
-  with Not_found -> false
 
 let rec return_type_root_of_string s =
   let bp = String.starts_with ~prefix:"BitPacked" s in
