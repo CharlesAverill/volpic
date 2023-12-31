@@ -1,10 +1,15 @@
 open Input
+open Vp_lifter.Parse_tree
 
-let done_reading = ref false
+let do_read = ref true
 
 let in_header = ref false
 
 let to_parse = ref ""
+
+let get_func_name_type = ref false
+
+let funcs = ref []
 
 let all_chars_are_star str =
   let is_star c = c = '*' in
@@ -26,9 +31,18 @@ let contains s1 s2 =
   with Not_found -> false
 
 let process_line _line_number line_content =
-  if contains line_content "firstpass" then done_reading := true
+  if contains line_content "firstpass" then do_read := false
+  else if contains line_content "after parsing" then (
+    do_read := true ;
+    get_func_name_type := true )
   else if all_chars_are_star line_content then in_header := not !in_header
-  else if (not !in_header) && String.length (String.trim line_content) > 0 then
+  else if !get_func_name_type then (
+    (* string_of_return_type_root (return_type_root_of_string line_content) ; *)
+    funcs := return_type_root_of_string line_content :: !funcs ;
+    get_func_name_type := false )
+  else if
+    !do_read && (not !in_header) && String.length (String.trim line_content) > 0
+  then
     (*
       There's a line like this in my input:
         proc = FpSignal(LongInt;signalhandler_t):<procedure variable type of procedure(LongInt);CDecl>;
@@ -46,19 +60,19 @@ let process_file fn =
   let in_channel = open_in fn in
   try
     let rec read_lines line_number =
-      if !done_reading then ()
-      else
-        match input_line in_channel with
-        | exception End_of_file ->
-            ()
-        | line_content ->
-            process_line line_number line_content ;
-            read_lines (line_number + 1)
+      match input_line in_channel with
+      | exception End_of_file ->
+          ()
+      | line_content ->
+          process_line line_number line_content ;
+          read_lines (line_number + 1)
     in
     read_lines 1
   with e -> close_in in_channel ; raise e
 
 let read_tree fn =
   process_file fn ;
-  (* print_endline (String.trim !to_parse) ; *)
-  parse_string (String.trim !to_parse ^ "\n") fn
+  List.mapi
+    (fun i pt ->
+      {pt with is_func= true; func_type= List.nth (List.rev !funcs) i} )
+    (parse_string (String.trim !to_parse ^ "\n") fn)

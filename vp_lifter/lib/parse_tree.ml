@@ -123,8 +123,10 @@ type return_type_root =
   | MemoryWord
   | QuarterWord
   | HalfWord
+  | LongWord
   | Array of (bool * range * return_type_root)
   | Procedure of (string * return_type list)
+  | Function of (string * return_type list * return_type)
 
 and return_type = RT of return_type_root | Const of return_type_root
 
@@ -177,12 +179,18 @@ let rec string_of_return_type_root = function
       "quarterword"
   | HalfWord ->
       "halfword"
+  | LongWord ->
+      "longword"
   | Array (bp, r, rt) ->
       (if bp then "BitPacked " else "")
       ^ "Array" ^ string_of_range r ^ " Of "
       ^ string_of_return_type (RT rt)
   | Procedure (id, args) ->
       id ^ "(" ^ String.concat ";" (List.map string_of_return_type args) ^ ")"
+  | Function (id, args, rt) ->
+      Printf.sprintf "%s(%s):%s" id
+        (String.concat ";" (List.map string_of_return_type args))
+        (string_of_return_type rt)
 
 and string_of_return_type : return_type -> string = function
   | RT rt ->
@@ -203,12 +211,22 @@ let rec return_type_root_of_string s =
              (Str.search_backward (Str.regexp_string " ") s
                 (String.length s - 1) ) ) )
   else if contains s "(" then
-    Procedure
-      ( string_before_substr s "("
-      , [ return_type_of_string
-            (string_after_substr (string_before_substr s ")") "(") ] )
+    if contains s ":" then
+      Function
+        ( string_before_substr s "("
+        , [ return_type_of_string
+              (string_after_substr (string_before_substr s ")") "(") ]
+        , return_type_of_string
+            (string_after_substr (string_before_substr s ";") ":") )
+    else
+      Procedure
+        ( string_before_substr s "("
+        , [ return_type_of_string
+              (string_after_substr (string_before_substr s ")") "(") ] )
   else
     match String.trim (String.lowercase_ascii s) with
+    | "$main; register;" ->
+        Procedure ("main", [])
     | "<nil>" ->
         Nil
     | "untyped" ->
@@ -255,6 +273,8 @@ let rec return_type_root_of_string s =
         QuarterWord
     | "halfword" ->
         HalfWord
+    | "longword" ->
+        LongWord
     | _ ->
         failwith ("Unknown return type " ^ s)
 
@@ -279,6 +299,7 @@ type flag =
   | Nf_internal
   | Nf_write
   | Nf_callunique
+  | Nf_absolute
   | Ti_may_be_in_reg
 
 let string_of_flag = function
@@ -292,6 +313,8 @@ let string_of_flag = function
       "ti_may_be_in_reg"
   | Nf_callunique ->
       "nf_callunique"
+  | Nf_absolute ->
+      "nf_absolute"
 
 let string_of_flags f =
   "[" ^ String.concat "," (List.map string_of_flag f) ^ "]"
@@ -308,6 +331,8 @@ let flag_of_string s =
       Nf_write
   | "nf_callunique" ->
       Nf_callunique
+  | "nf_absolute" ->
+      Nf_absolute
   | _ ->
       failwith ("Unknown flag " ^ s)
 
@@ -315,6 +340,10 @@ type pt_vtype =
   | Blank
   | Integer of int
   | Str of string
+  | ProcFunc of
+      ( string (* identifier *)
+      * string (* arguments *)
+      * string (* Return type *) )
   | List of (string * pt_vtype) list
   | Flags of flag list
 
@@ -329,6 +358,8 @@ let rec string_of_vtype = function
       Printf.sprintf "[%s]"
         (String.concat ","
            (List.map (fun i -> fst i ^ " = " ^ string_of_vtype (snd i)) l) )
+  | ProcFunc (id, e, rt) ->
+      Printf.sprintf "%s(%s)%s%s" id e (if rt = "" then "" else ":") rt
   | Flags f ->
       string_of_flags f
 
@@ -353,7 +384,9 @@ let find_data (data : (string * pt_vtype) list) key =
   snd (List.find (fun s -> fst s = key) data)
 
 type parse_tree_node =
-  { pt_type: parse_tree_node_type
+  { is_func: bool
+  ; func_type: return_type_root
+  ; pt_type: parse_tree_node_type
   ; label: string
   ; resultdef: return_type
   ; pos: int * int
@@ -369,8 +402,11 @@ let rec strn s = function 0 -> "" | n -> s ^ strn s (n - 1)
 
 let rec _string_of_parse_tree indent_lvl t =
   Printf.sprintf
-    "%s(%s, resultdef = %s, pos = (%d, %d), loc = %s, expectloc = %s, flags = \
-     %s, cmplx = %d%s%s%s%s%s)"
+    "%s%s(%s, resultdef = %s, pos = (%d, %d), loc = %s, expectloc = %s, flags \
+     = %s, cmplx = %d%s%s%s%s%s)"
+    ( if t.is_func then
+        string_of_return_type_root t.func_type ^ "\n********************\n"
+      else "" )
     (if t.label <> "" then t.label ^ " = " else "")
     (string_of_parse_tree_type t.pt_type)
     (string_of_return_type t.resultdef)

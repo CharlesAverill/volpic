@@ -60,7 +60,9 @@ Extract Inlined Constant print_endline => "print_endline".
 Axiom print_int : Z -> unit.
 Extract Inlined Constant print_int => "print_int".
 
-Axiom fpc_write_text_uint : store -> Z -> Z -> store.
+(* Axiom fpc_write_text_uint : store -> Z -> Z -> store. *)
+Definition fpc_write_text_uint (s : store) (_ _ : Z) := s.
 Extract Inlined Constant fpc_write_text_uint => "(fun s x _ -> print_int x; s)".
-Axiom fpc_writeln_end : store -> store.
+(* Axiom fpc_writeln_end : store -> store. *)
+Definition fpc_writeln_end (s : store) := s.
 Extract Inlined Constant fpc_writeln_end => "(fun s -> print_endline String.empty; s)".

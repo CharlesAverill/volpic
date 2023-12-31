@@ -5,7 +5,7 @@ open Vp_lifter.Converter
 open Argparse
 open Filename
 
-let get_parse_tree fn args =
+let get_parse_trees fn args =
   let dir = Sys.getcwd () in
   if args.do_compile then (
     Sys.chdir (dirname fn) ;
@@ -17,17 +17,31 @@ let get_parse_tree fn args =
         failwith
           ( "Tree generation command `" ^ cmd ^ "` failed with exit code "
           ^ string_of_int n ) ) ;
-  let parse_tree = List.hd (read_tree args.tree_log) in
+  let parse_trees = read_tree args.tree_log in
   if args.do_compile then Sys.chdir dir ;
-  parse_tree
+  parse_trees
 
 let () =
   let args = parse_arguments () in
-  let parse_tree = get_parse_tree args.input_fn args in
-  let gast = gallina_of_parse_tree parse_tree in
+  let parse_trees = get_parse_trees args.input_fn args in
+  let func_names =
+    List.map
+      (fun pt ->
+        match pt.func_type with
+        | Procedure (id, _) | Function (id, _, _) ->
+            id
+        | _ ->
+            failwith "Expected procedure or function as root node" )
+      parse_trees
+  in
+  let gasts = List.map (gallina_of_parse_tree 0) parse_trees in
   let out =
-    string_of_gallina gast args.input_fn args.do_extract args.extract_language
-      args.extract_path
+    String.concat "\n"
+      (List.mapi
+         (fun i ->
+           string_of_gallina (i = 0) args.input_fn args.do_extract
+             args.extract_language args.extract_path (List.nth func_names i) )
+         gasts )
   in
   print_endline out ;
   let oc = open_out args.output_fn in

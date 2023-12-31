@@ -12,7 +12,9 @@ let parse_error lexbuf =
         let display_contents =
           try
             " -\n"
-            ^ String.sub !contents (max 0 (lexbuf.Lexing.lex_curr_pos - 60)) 60
+            ^ String.sub !contents
+                (max 0 (lexbuf.Lexing.lex_curr_pos - 120))
+                120
           with _ -> Lexing.lexeme lexbuf
         in
         "Unexpected end of file, last read " ^ display_contents

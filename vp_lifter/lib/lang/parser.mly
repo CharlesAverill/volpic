@@ -35,9 +35,10 @@
 
 main :
       EOF  { [] }
-    | node { match $1 with None -> [] | Some n -> [n] }
+    | node_list { $1 }
 
 node_list : { [] }
+    | EOF { [] }
     | node node_list { match $1 with None -> $2 | Some n -> n :: $2 }
 
 node :
@@ -56,6 +57,8 @@ node :
     RIGHT_PARENTHESIS  
     {   
         Some { 
+            is_func = false;
+            func_type = Nil;
             pt_type = nt;
             label = label;
             resultdef = return_type_of_string rd;
@@ -145,9 +148,10 @@ data_val :
     | NUMBER        { Integer $1 }
     | IDENTIFIER EQUALS STRING  { Str $3 }
     | DOLLAR IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $2 ^ ":" ^ $4) }
-    | DOLLAR IDENTIFIER ptypestr SEMICOLON { Str $2 }
+    | DOLLAR IDENTIFIER ptypestr SEMICOLON { ProcFunc ($2, $3, "") }
     | IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $1 ^ ":" ^ $3) }
-    | IDENTIFIER ptypestr SEMICOLON { Str $2 }
+    | IDENTIFIER ptypestr SEMICOLON { ProcFunc ($1, $2, "") }
+    | IDENTIFIER ptypestr COLON qualified_type SEMICOLON { ProcFunc ($1, $2, $4) }
     | DOLLAR HEX        { Integer (int_of_string ("0x" ^ (Str.string_after $2 1))) }
 
 data_seq :
