@@ -82,12 +82,24 @@ let string_of_range = function
       "[" ^ string_of_int a ^ ".." ^ string_of_int b ^ "]"
 
 let string_before_substr str sub =
-  Str.string_before str (Str.search_forward (Str.regexp_string sub) str 0)
+  try
+    Str.string_before str
+      ( try Str.search_forward (Str.regexp_string sub) str 0
+        with Not_found ->
+          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+  with Not_found ->
+    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
 let string_after_substr str sub =
-  Str.string_after str
-    ( Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
-    + String.length sub )
+  try
+    Str.string_after str
+      ( try
+          Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
+          + String.length sub
+        with Not_found ->
+          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+  with Not_found ->
+    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
 let range_of_string s =
   if s = "" then Unbounded
@@ -115,7 +127,7 @@ type return_type_root =
   | Boolean
   | SmallInt
   | Twohalves
-  | Record
+  | Record of string
   | Word
   | SmallNumber
   | StrNumber
@@ -124,11 +136,19 @@ type return_type_root =
   | QuarterWord
   | HalfWord
   | LongWord
+  | Eightbits
+  | Bytefile
+  | Wordfile
+  | Windownumber
+  | Commandcode
   | Array of (bool * range * return_type_root)
   | Procedure of (string * return_type list)
   | Function of (string * return_type list * return_type)
 
-and return_type = RT of return_type_root | Const of return_type_root
+and return_type =
+  | RT of return_type_root
+  | Const of return_type_root
+  | Var of return_type_root
 
 let rec string_of_return_type_root = function
   | Nil ->
@@ -163,8 +183,8 @@ let rec string_of_return_type_root = function
       "SmallInt"
   | Twohalves ->
       "twohalves"
-  | Record ->
-      "<record type>"
+  | Record s ->
+      s ^ " = <record type>"
   | Word ->
       "Word"
   | SmallNumber ->
@@ -181,6 +201,16 @@ let rec string_of_return_type_root = function
       "halfword"
   | LongWord ->
       "longword"
+  | Eightbits ->
+      "eightbits"
+  | Bytefile ->
+      "bytefile"
+  | Wordfile ->
+      "wordfile"
+  | Windownumber ->
+      "windownumber"
+  | Commandcode ->
+      "commandcode"
   | Array (bp, r, rt) ->
       (if bp then "BitPacked " else "")
       ^ "Array" ^ string_of_range r ^ " Of "
@@ -197,8 +227,11 @@ and string_of_return_type : return_type -> string = function
       string_of_return_type_root rt
   | Const rt ->
       "Constant " ^ string_of_return_type_root rt
+  | Var rt ->
+      "Var " ^ string_of_return_type_root rt
 
 let rec return_type_root_of_string s =
+  if String.length s = 0 then failwith "Can't parse return type of empty string" ;
   let bp = String.starts_with ~prefix:"BitPacked" s in
   if String.get s 0 = '^' then
     Pointer (return_type_root_of_string (String.sub s 1 (String.length s - 1)))
@@ -216,13 +249,16 @@ let rec return_type_root_of_string s =
         ( string_before_substr s "("
         , [ return_type_of_string
               (string_after_substr (string_before_substr s ")") "(") ]
-        , return_type_of_string
-            (string_after_substr (string_before_substr s ";") ":") )
+        , return_type_of_string (string_after_substr s ":") )
     else
       Procedure
         ( string_before_substr s "("
-        , [ return_type_of_string
-              (string_after_substr (string_before_substr s ")") "(") ] )
+        , List.map return_type_of_string
+            (remove_empties
+               [string_after_substr (string_before_substr s ")") "("] ) )
+  else if contains s ";" then Procedure (string_before_substr s ";", [])
+  else if contains s "<record type>" then
+    Record (string_before_substr s "<record type>")
   else
     match String.trim (String.lowercase_ascii s) with
     | "$main; register;" ->
@@ -257,8 +293,6 @@ let rec return_type_root_of_string s =
         SmallInt
     | "twohalves" ->
         Twohalves
-    | "<record type>" ->
-        Record
     | "word" ->
         Word
     | "smallnumber" ->
@@ -275,12 +309,25 @@ let rec return_type_root_of_string s =
         HalfWord
     | "longword" ->
         LongWord
+    | "eightbits" ->
+        Eightbits
+    | "bytefile" ->
+        Bytefile
+    | "wordfile" ->
+        Wordfile
+    | "windownumber" ->
+        Windownumber
+    | "commandcode" ->
+        Commandcode
     | _ ->
-        failwith ("Unknown return type " ^ s)
+        Record (String.trim (String.lowercase_ascii s))
+(* failwith ("Unknown return type " ^ s) *)
 
 and return_type_of_string s =
   if String.starts_with ~prefix:"Constant " s then
     Const (return_type_root_of_string (string_after_substr s "Constant "))
+  else if String.starts_with ~prefix:"var " s then
+    Var (return_type_root_of_string (string_after_substr s "var "))
   else RT (return_type_root_of_string s)
 
 type loc = Loc_invalid
@@ -381,7 +428,8 @@ let string_of_optional = function
       "[" ^ String.concat "," l ^ "]"
 
 let find_data (data : (string * pt_vtype) list) key =
-  snd (List.find (fun s -> fst s = key) data)
+  try snd (List.find (fun s -> fst s = key) data)
+  with Not_found -> failwith ("Couldn't find key " ^ key ^ " in data list")
 
 type parse_tree_node =
   { is_func: bool

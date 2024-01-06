@@ -5,16 +5,18 @@ Import ListNotations.
 Open Scope Z.
 Open Scope list_scope.
 
+Declare Scope volpic_scope.
+Open Scope volpic_scope.
 Definition id_type := string.
 
 Inductive value : Type :=
-| Null
-| Integer   (n : Z)
-| String    (s : string).
+| VNull
+| VInteger   (n : Z)
+| VString    (s : string).
 
 Definition store : Type := (list id_type * (id_type -> value)).
 
-Definition fresh_store : store := (nil, fun _ => Null).
+Definition fresh_store : store := (nil, fun _ => VNull).
 
 Definition ids : store -> list id_type := fst.
 Definition in_ids (VOLPIC_store : store) (s : id_type) :=
@@ -28,23 +30,36 @@ Definition all_in_ids (VOLPIC_store : store) (l : list id_type) :=
             andb acc (in_ids VOLPIC_store item)
     ) l true.
 
-Definition get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s.
+Definition sf_get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s.
 
 Definition get_int (VOLPIC_store : store) (s : id_type) :=
-    match get VOLPIC_store s with
-    | Integer n => n
+    match sf_get VOLPIC_store s with
+    | VInteger n => n
     | _ => 0
     end.
 
 Definition get_string (VOLPIC_store : store) (s : id_type) :=
-    match get VOLPIC_store s with
-    | String s => s
+    match sf_get VOLPIC_store s with
+    | VString s => s
     | _ => EmptyString
     end.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else s :: (fst VOLPIC_store), 
-    fun x => if string_dec x s then v else (get VOLPIC_store s)).
+    fun x => if String.eqb x s then v else (snd VOLPIC_store x)).
+
+Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
+    let record_ids := List.filter (String.prefix source_prefix) (ids source_store) in
+    List.fold_left (fun acc id => update acc (
+        String.append dest_prefix (
+            String.substring 
+                (String.length source_prefix) 
+                ((String.length id) - (String.length source_prefix)) 
+                id
+        )
+    ) (sf_get source_store id)) record_ids dest_store.
+
+Close Scope volpic_scope.
 
 Require Import Coq.extraction.Extraction.
 Require Import ExtrOcamlBasic.

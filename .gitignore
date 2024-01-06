@@ -23,3 +23,6 @@ parser.output
 theories/Makefile
 theories/Makefile.conf
 theories/.Makefile.d
+*/tree.log
+*/tree.log.proc
+peda-session*

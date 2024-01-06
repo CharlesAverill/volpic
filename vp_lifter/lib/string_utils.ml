@@ -4,13 +4,19 @@ let id_prefix = "VP_"
 
 let store_name = id_prefix ^ "store"
 
+let fresh_store = "fresh_store"
+
 let id_expr_constr = "Identifier"
 
-let int_expr_constr = "Integer"
+let int_expr_constr = "VInteger"
 
-let unit_expr_constr = "Unit"
+let str_expr_constr = "VString"
+
+let unit_expr_constr = "VUnit"
 
 let poison = id_prefix ^ "poison"
+
+let sf_get = "sf_get"
 
 let comment s = "(*" ^ s ^ "*)"
 

@@ -35,6 +35,16 @@ let lang_ext l =
   | _ ->
       failwith "Unexpected language " ^ l
 
+let sanitize_id id =
+  let replacements = [("$", "")] in
+  let id =
+    List.fold_left
+      (fun acc (rexp, repl) ->
+        Str.global_replace (Str.regexp_string rexp) repl acc )
+      id replacements
+  in
+  if contains id ":" then string_before_substr id ":" else id
+
 let extraction fn lang path =
   let path =
     if path = "" then
@@ -44,7 +54,7 @@ let extraction fn lang path =
   in
   String.concat "" ["Extraction \""; path; "\" main."]
 
-type coq_type = Error | Z | String | Unit
+type coq_type = Error | Z | String | Unit | Record
 
 let string_of_coq_type = function
   | Z ->
@@ -53,6 +63,8 @@ let string_of_coq_type = function
       "string"
   | Unit ->
       "unit"
+  | Record ->
+      "record"
   | Error ->
       failwith "Tried to get string of error coq type"
 
@@ -69,6 +81,8 @@ let type_of_return_type_root r =
   match r with
   | Dword | LongWord ->
       Z
+  | Record _ ->
+      Record
   | _ ->
       failwith ("Haven't set coq type for RTR " ^ string_of_return_type_root r)
 
@@ -78,6 +92,8 @@ let type_of_expr = function
       !gamma id
   | Integer _ | Add _ | Sub _ ->
       Z
+  | String _ ->
+      String
   | ProcCall _ ->
       Unit
   | FuncCall (_, typ, _) ->
@@ -97,13 +113,15 @@ let rec string_of_expr x shallow =
         ; "\"" ^ id_prefix ^ id ^ "\"" ]
   | Integer n ->
       string_of_int n
+  | String s ->
+      "\"" ^ s ^ "\""
   | Add (e1, e2) ->
       binop "+" e1 e2
   | Sub (e1, e2) ->
       binop "-" e1 e2
   | ProcCall (id, e) ->
       String.concat " "
-        ( id
+        ( sanitize_id id
         :: remove_empties
              ( store_name
              :: List.map
@@ -113,18 +131,22 @@ let rec string_of_expr x shallow =
                   e ) )
   | FuncCall (id, rt, e) ->
       String.concat " "
-        [ coq_type_getter (type_of_return_type_root rt)
-        ; parens
-            (String.concat " "
-               ( id
-               :: remove_empties
-                    ( store_name
-                    :: List.map
-                         (fun s ->
-                           let se = string_of_expr s shallow in
-                           if contains se " " then parens se else se )
-                         e ) ) )
-        ; stringify "result" ]
+        (remove_empties
+           [ coq_type_getter (type_of_return_type_root rt)
+           ; parens
+               ( (match rt with Record _ -> "" | _ -> sf_get ^ " ")
+               ^ parens
+                   (String.concat " "
+                      ( sanitize_id id
+                      :: remove_empties
+                           ( store_name
+                           :: List.map
+                                (fun s ->
+                                  let se = string_of_expr s shallow in
+                                  if contains se " " then parens se else se )
+                                e ) ) )
+               ^ match rt with Record _ -> "" | _ -> " " ^ stringify "result" )
+           ; (match rt with Record _ -> stringify "result" | _ -> "") ] )
   | Nothing ->
       ""
 
@@ -133,6 +155,8 @@ and coq_type_getter = function
       "get_int"
   | String ->
       "get_string"
+  | Record ->
+      ""
   | Unit ->
       failwith "Shouldn't be calling a getter for unit-type expr"
   | Error ->
@@ -148,12 +172,16 @@ let store_string_of_expr e =
             id_expr_constr
         | Integer _ | Add _ | Sub _ ->
             int_expr_constr
+        | String _ ->
+            str_expr_constr
         | ProcCall _ ->
             unit_expr_constr
         | FuncCall (_, rt, _) -> (
           match rt with
           | Dword ->
               int_expr_constr
+          | Record s ->
+              comment ("record" ^ s)
           | _ ->
               failwith
                 ( "RTR "
@@ -167,13 +195,22 @@ let store_string_of_expr e =
   ^ ")"
 
 let rec string_of_stmt extract s =
+  (* TODO : For function calls, clear the 'result' variable after using it *)
   let f : stmt -> string = function
     | Nothing ->
         comment "nothingn statement"
-    | Assignment (id, expr) ->
-        update_typctx id (type_of_expr expr) ;
-        String.concat " "
-          ["update"; store_name; stringify id; store_string_of_expr expr]
+    | Assignment (id, expr) -> (
+      match type_of_expr expr with
+      | Record ->
+          String.concat " "
+            [ "update_record"
+            ; store_name
+            ; stringify id
+            ; string_of_expr expr false ]
+      | _ ->
+          update_typctx id (type_of_expr expr) ;
+          String.concat " "
+            ["update"; store_name; stringify id; store_string_of_expr expr] )
     | Sequence l ->
         String.concat "\n\t"
           ( comment
@@ -188,8 +225,11 @@ let rec string_of_stmt extract s =
   in
   f s
 
+(*
+   Return all identifiers in an expression
+*)
 let rec all_ids_in_expr : expr -> string list = function
-  | Integer _ | Nothing ->
+  | Integer _ | Nothing | String _ ->
       []
   | Identifier id ->
       [id]
@@ -197,11 +237,12 @@ let rec all_ids_in_expr : expr -> string list = function
       all_ids_in_expr e1 @ all_ids_in_expr e2
   | Sub (e1, e2) ->
       all_ids_in_expr e1 @ all_ids_in_expr e2
-  | ProcCall (_, e) ->
-      List.concat (List.map all_ids_in_expr e)
-  | FuncCall (_, _, e) ->
+  | ProcCall (_, e) | FuncCall (_, _, e) ->
       List.concat (List.map all_ids_in_expr e)
 
+(*
+   Return all identifiers in a statement
+*)
 let rec all_ids_in_stmt : stmt -> string list = function
   | Nothing ->
       []
@@ -212,7 +253,17 @@ let rec all_ids_in_stmt : stmt -> string list = function
   | SideEffect expr ->
       all_ids_in_expr expr
 
+(*
+   Wrapper for string_of_stmt that adds a "poison check," essentially capturing
+   runtime errors, including:
+
+   - Undefined variable (not a runtime error, added for practice)
+*)
 let poison_check stmt extract =
+  (* TODO : For all stores in a statement, ensure that
+     if the ident already exists, the type of its new value
+     matches the type of its old value. If not, poisoned.
+  *)
   letins [store_name; poison]
     [ String.concat " "
         [ "if"
@@ -238,15 +289,18 @@ let poison_check stmt extract =
         ; "else"
         ; pair store_name "true" ] ]
 
+(* Generate function/procedure definitions *)
 let rec _str_of_gal_aux extract = function
+  (* TODO : For functions, return should be original passed-in store with result var set,
+     should naturally handle function scopes *)
   | Root (pt, gal) ->
       ( match pt.func_type with
       | Procedure (id, rtl) ->
           String.concat " "
-            ( [definition_str; id; "(" ^ store_name ^ ": store)"]
+            ( [definition_str; sanitize_id id; "(" ^ store_name ^ ": store)"]
             @ List.mapi
                 (fun i rt ->
-                  let t = match rt with RT n | Const n -> n in
+                  let t = match rt with RT n | Const n -> n | Var n -> n in
                   String.concat " "
                     [ "("
                     ; "arg" ^ string_of_int i
@@ -257,10 +311,10 @@ let rec _str_of_gal_aux extract = function
             @ [":="; "\n\t"] )
       | Function (id, rtl, rt) ->
           String.concat " "
-            ( [definition_str; id; "(" ^ store_name ^ ": store)"]
+            ( [definition_str; sanitize_id id; "(" ^ store_name ^ ": store)"]
             @ List.mapi
                 (fun i rt ->
-                  let t = match rt with RT n | Const n -> n in
+                  let t = match rt with RT n | Const n -> n | Var n -> n in
                   String.concat " "
                     [ "("
                     ; "arg" ^ string_of_int i
@@ -280,6 +334,7 @@ let rec _str_of_gal_aux extract = function
   | Statement s ->
       poison_check s extract
 
+(* Entry function *)
 let string_of_gallina do_preamble fn extract extract_lang extract_path func_name
     g =
   String.concat "\n"

@@ -10,8 +10,8 @@
 %token <int>    NUMBER
 %token <string> HEX
 
-%token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_BRACE RIGHT_BRACE
-%token COMMA EQUALS DOLLAR CARROT SEMICOLON NEWLINE COLON DOT
+%token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_BRACE RIGHT_BRACE LEFT_BRACKET RIGHT_BRACKET
+%token COMMA EQUALS DOLLAR CARROT SEMICOLON COLON DOT
 %token NIL RESULTDEF POS LOC EXPECTLOC FLAGS CMPLX NILBRACKETS VAR CONST NOTYPESYM
     LEFT TEMPINIT
 %token EOF
@@ -21,6 +21,8 @@
 %type <Vp_lifter.Parse_tree.parse_tree_node option> node
 %type <Vp_lifter.Parse_tree.parse_tree_node_type> node_type
 %type <string> resultdef typestrptr qualified_type typestr ptypestr label
+%type <int> cmplx 
+%type <int option> option(cmplx)
 %type <Vp_lifter.Parse_tree.flag list> flags flags_list
 %type <(string * Vp_lifter.Parse_tree.pt_vtype) list> data_list data_seq nonempty_list(data)
 %type <Vp_lifter.Parse_tree.pt_vtype> data_val
@@ -30,6 +32,7 @@
 %type <((string * Vp_lifter.Parse_tree.optional) list) option> option(optionals)
 %type <(string * Vp_lifter.Parse_tree.optional)> optional
 %type <string list> opt_list separated_nonempty_list(SEMICOLON, qualified_type) loption(separated_nonempty_list(SEMICOLON,qualified_type))
+%type <unit option> option(COMMA)
 
 %%
 
@@ -50,12 +53,12 @@ node :
         POS EQUALS LEFT_PARENTHESIS ln = NUMBER COMMA cn = NUMBER RIGHT_PARENTHESIS COMMA
         LOC EQUALS loc = IDENTIFIER COMMA
         EXPECTLOC EQUALS eloc = IDENTIFIER COMMA
-        FLAGS EQUALS flags = flags COMMA
-        CMPLX EQUALS cmplx = NUMBER
+        FLAGS EQUALS flags = flags COMMA?
+        cmplx = cmplx?
         opts = optionals?
         ndl = node_data_list
     RIGHT_PARENTHESIS  
-    {   
+    {
         Some { 
             is_func = false;
             func_type = Nil;
@@ -66,12 +69,14 @@ node :
             loc = loc_of_string loc;
             expectloc = loc_of_string eloc;
             flags = flags;
-            cmplx = cmplx;
+            cmplx = (match cmplx with Some n -> n | _ -> 0);
             optionals = (match opts with None -> [] | Some l -> l);
             data = fst ndl;
             children = snd ndl;
         }
     }
+
+cmplx : CMPLX EQUALS NUMBER { $3 }
 
 node_data_list : node_list data_list { ($2, $1) } | data_list node_list { ($1, $2) }
 
@@ -118,15 +123,14 @@ node_type :
 resultdef :
       RESULTDEF EQUALS IDENTIFIER           { $3 }
     | RESULTDEF EQUALS DOLLAR IDENTIFIER EQUALS STRING { $6 }
-    | RESULTDEF EQUALS typestr EQUALS STRING    { $5 }
+    | RESULTDEF EQUALS typestr EQUALS STRING    { if $5 = "<record type>" then $3 ^ $5 else $5 }
     | RESULTDEF EQUALS NILBRACKETS          { "<nil>" }
 
 flags :
-      LEFT_BRACE RIGHT_BRACE            { [] }
     | LEFT_BRACE flags_list RIGHT_BRACE { $2 }
 
-flags_list : 
-      IDENTIFIER                    { [flag_of_string $1] }
+flags_list : { [] }
+    | IDENTIFIER                    { [flag_of_string $1] }
     | IDENTIFIER COMMA flags_list   { (flag_of_string $1) :: $3 }
 
 data_list : { [] }
@@ -145,10 +149,12 @@ individual_data :
 
 data_val :
       IDENTIFIER    { Str $1 }
+    | STRING        { Str $1 }
     | NUMBER        { Integer $1 }
     | IDENTIFIER EQUALS STRING  { Str $3 }
     | DOLLAR IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $2 ^ ":" ^ $4) }
     | DOLLAR IDENTIFIER ptypestr SEMICOLON { ProcFunc ($2, $3, "") }
+    | IDENTIFIER SEMICOLON { ProcFunc ($1, "", "") }
     | IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $1 ^ ":" ^ $3) }
     | IDENTIFIER ptypestr SEMICOLON { ProcFunc ($1, $2, "") }
     | IDENTIFIER ptypestr COLON qualified_type SEMICOLON { ProcFunc ($1, $2, $4) }
@@ -171,6 +177,7 @@ qualified_type :
       typestrptr        { $1 }
     | VAR typestrptr    { $2 }
     | CONST typestrptr  { $2 }
+    | LEFT_BRACKET qualified_type RIGHT_BRACKET { $2 }
 
 typestrptr :
       IDENTIFIER    { $1 }

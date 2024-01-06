@@ -1,20 +1,26 @@
 program Print5;
 
-var
-	x: cardinal;
-	y: cardinal;
+type
+  fourquarters = packed record
+    b0: cardinal;
+    b1: cardinal;
+    b2: string;
+    b3: string;
+  end;
 
-function test(y: cardinal) : cardinal;
 var
-	x : cardinal;
+	x: fourquarters;
+
+function test: fourquarters;
+var result : fourquarters;
 begin
-	x := 99;
-	test := x - 9;
+  result.b0 := 99;
+  test.b0 := 9;
+  test.b1 := 10;
+  test.b2 := 'bye';
+  test.b3 := 'world';
 end;
 
 begin
-	y := 6;
-	x := 5 + y;
-	x := test(y);
-	writeln(x);
+	x := test;
 end.

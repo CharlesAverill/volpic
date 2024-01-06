@@ -6,6 +6,7 @@ type expr =
   | Nothing
   | Identifier of id_type
   | Integer of int
+  | String of string
   | Add of expr * expr
   | Sub of expr * expr
   | ProcCall of (id_type * expr list)
@@ -29,6 +30,11 @@ let rec id_of_parse_tree parse_tree =
       string_of_vtype (find_data parse_tree.data "symbol")
   | Typeconv ->
       id_of_parse_tree (List.hd parse_tree.children)
+  | Subscript ->
+      String.concat ""
+        [ id_of_parse_tree (List.hd parse_tree.children)
+        ; "_"
+        ; string_of_vtype (find_data parse_tree.data "field") ]
   | _ ->
       failwith
         ( "Unexpected node type "
@@ -68,6 +74,10 @@ let rec expr_of_parse_tree parse_tree =
   | Callpara ->
       List.hd (find_parans [parse_tree])
   | Deref ->
+      Nothing
+  | Stringconst ->
+      String (string_of_vtype (find_data parse_tree.data "value"))
+  | Nothing ->
       Nothing
   | _ ->
       failwith

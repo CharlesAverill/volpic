@@ -22,7 +22,7 @@ let parse_error lexbuf =
         let display_contents =
           try
             " -\n"
-            ^ String.sub !contents (max 0 (lexbuf.Lexing.lex_curr_pos - 60)) 60
+            ^ String.sub !contents (max 0 (lexbuf.Lexing.lex_curr_pos - 80)) 80
           with Invalid_argument _ -> ""
         in
         "Unexpected token '" ^ Lexing.lexeme lexbuf ^ "' at "

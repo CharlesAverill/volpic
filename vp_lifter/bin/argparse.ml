@@ -15,7 +15,9 @@ type arguments =
   ; do_compile: bool
   ; do_extract: bool
   ; extract_language: string
-  ; extract_path: string }
+  ; extract_path: string
+  ; fpc_path: string
+  ; use_preproc: bool }
 
 let parse_arguments () =
   let files = ref [] in
@@ -25,11 +27,13 @@ let parse_arguments () =
   let do_extract = ref false in
   let extract_lang = ref "" in
   let extract_fp = ref "" in
+  let fpc_path = ref "fpc" in
+  let use_preproc = ref false in
   let speclist =
     Arg.
-      [ ( "-fpc-flags"
+      [ ( "-fpc-args"
         , Arg.Set_string fpc_flags
-        , "Flags passed to FPC during compilation" )
+        , "Args passed to FPC during compilation" )
       ; ( "-use-tree"
         , Arg.String
             (fun s ->
@@ -46,7 +50,21 @@ let parse_arguments () =
            Haskell}" )
       ; ( "-extract-path"
         , Arg.Set_string extract_fp
-        , "Path of extracted file relative to generated Coq file" ) ]
+        , "Path of extracted file relative to generated Coq file" )
+      ; ( "-tex-mf"
+        , Arg.Unit
+            (fun _ ->
+              fpc_flags :=
+                String.concat " " [!fpc_flags; "-Fasysutils,baseunix,unix"] )
+        , "Compile with flags for TeX and MF" )
+      ; ( "-fpc-path"
+        , Arg.Set_string fpc_path
+        , "Path to FPC binary, defaults to 'fpc'" )
+      ; ( "-use-preproc"
+        , Arg.Set use_preproc
+        , "Use a preprocessed tree.log if available. These files are emitted \
+           on parsing. This option should only be used if the program isn't \
+           changing (updates won't be detected)" ) ]
   in
   let usage_msg = "Usage: vp_lifter <INPUT> <OUTPUT>? [options]" in
   Arg.parse speclist (fun n -> files := n :: !files) usage_msg ;
@@ -70,9 +88,11 @@ let parse_arguments () =
   ; output_fn
   ; tree_log=
       ( if !tree_log = "" then
-          String.concat "" [Filename.remove_extension input_fn; ".tree.log"]
+          String.concat "/" [Filename.dirname input_fn; "tree.log"]
         else !tree_log )
   ; do_compile= !do_compile
   ; do_extract= !do_extract
   ; extract_language= !extract_lang
-  ; extract_path= !extract_fp }
+  ; extract_path= !extract_fp
+  ; fpc_path= !fpc_path
+  ; use_preproc= !use_preproc }

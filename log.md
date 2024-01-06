@@ -95,8 +95,176 @@ poison check, but it's still required to compile.
 I just realized I'll need a typing context so I know which get function to call...
 ugh.
 
+Huge issue encountered! FPC does not export some pretty important data points:
+
+- Values of string constants
+- Record field names when loading/storing
+
+I've patched the compiler to support string constants, currently working on 
+field names, but it seems much more complicated. Going to submit a merge request
+when I finish, exciting!
+
+[Merge Request](https://gitlab.com/freepascal.org/fpc/source/-/merge_requests/567) 
+complete! Was about as challenging as I was expecting. Still waiting on approval,
+but the code works as I need it to, so I'll be going forward using my own branch. 
+
 # Extraction
+
+Work on extraction began briefly after the first successful lift was performed.
+I'm very thankful that I had mentioned I was considering verifying another 
+project of mine to my advisor a few months ago, because he gave me a piece of
+advice that was crucial to piecing things together here (I'm paraphrasing):
+    "If you want to verify code that has side effect functions, like printing
+    or rendering to a screen, you'll have to admit those as axioms in Coq."
+I was very disappointed in 
+- The official Coq page on code extraction (although not surprised given how 
+lackluster all official Coq documentation is)
+- The Software Foundations "Extraction" chapter (very surprised given how 
+incredible the rest of the textbook is)
+- The CoqOfOCaml project, which seemed like a good first place to start looking
+for lifting a simple "Hello World!" program, but does not have a MWE available
+via the latest opam distribution.
+
+It turns out extraction of side effect functions is as easy as 
+admitting them as axioms, and then giving Coq an exact textual
+representation of what you want that side effect function to 
+extract to. For example:
+
+```coq
+Axiom print_endline : string -> unit.
+Extract Inlined Constant print_endline => "print_endline".
+
+(* This one is necessary because Coq extracts coq strings as
+ocaml char lists *)
+Axiom string_of_char_list : string -> string.
+Extract Constant string_of_char_list => "fun cl -> (String.of_seq (List.to_seq cl))".
+```
+
+You don't even have to make them axioms. One issue I was having was
+when I generated side effect code, if I used 
+`let _ = <side effect> in <rest of program>`, Coq just wouldn't
+extract the side effect at all. The solution was to make them
+definitions rather than axioms, meaning I could make them perform
+any side effects on the global state that I wanted, but still
+give them a reasonable extraction value:
+
+```coq
+Definition fpc_write_text_uint (s : store) (_ _ : Z) := s.
+Extract Inlined Constant fpc_write_text_uint => "(fun s x _ -> print_int x; s)".
+```
+
+I currently only have support for OCaml because of 
+`Extract Inlined Constant` vernaculars like this one, but it
+shouldn't be very difficult to write Haskell versions of 
+everything, and then parametrize my generated Coq code to include
+either an OCaml or Haskell extraction library.
+
+I've implemented struct accesses by "unfolding" the structs; each field has its
+own symbol in the store, which is just "<struct variable name>_<field name>".
+This is fine for now, but brings up a problem: if a struct is returned from a 
+function, the caller would have to rename (?) the result variables. Although now
+that I'm thinking about it, wouldn't this need to happen anyways? 
+
+Nevermind! That was easy enough to implement.
 
 # Correctness
 
 # Verification
+
+# Methodology
+
+This section doesn't have anything specific to do with the project, but I want
+to answer a question I get frequently, which is: 
+    "How do you go about completing your projects."
+So now that you've read a brief history of the project, I can give some examples
+that will put my methodology into context.
+
+## Step 1 - Don't Plan Ahead
+
+Step 1 is less of an action and more of a feeling. I have a loose idea of what
+I want to accomplish, and very often I know little to nothing about what tools,
+practices, languages, architectures, pipelines, or other facilities that I will
+use. Oftentimes, if I think I know something about any of those facilities, it
+will turn out to be wrong before a week of development has gone by!
+I will mention some examples like these throughout this section.
+
+My [Goal Section](#goal) was a day-1 rough idea of what I thought
+the entire pipeline would look like. As I write this in between
+working on the lifter and extraction, it seems to have been a 
+pretty accurate plan.
+
+## Step 2 - Go Blindly Into That Good Night
+
+The first action I take during development is simple - just start
+writing some code. Technically I didn't do this step first for
+Volpic, as I had to transliterate TeX and MF for FPC, which I would
+consider to be "environment setup" rather than code writing. 
+Regardless, right after that is when I started writing. I knew I
+would need access to parse trees, so I began writing a parser.
+And what better language to write a parser in than OCaml? Within
+a day, I had a very bad parser (that would get better!) written for
+a **subset** of FPC's (terrible) AST dump language.
+
+## Step 3 - Baby Steps
+
+Once I have a rudimentary project going, the space of possible
+features to add grows exponentially. After I could parse a subset
+of the AST language, I could now parse a slightly larger subset.
+Rinse and repeat about 20 times, throw in breaks to debug the 
+(still heavily conflicted) language grammar, and I had a pretty
+okay parser that could successfully parse a simple "Hello World!"
+
+With a parser written, I could now jump over to lifting, the part
+I've been most excited to work on. I'll talk more about what 
+happened there, but the main idea is that I eventually got to a 
+point to where I could work on parsing, lifting, extraction, and
+verification at any point in time. This is where my "flow state"
+begins. I feel like a cowboy on the frontier, exploring the unknown
+with nobody to answer to. I'm still in the middle of this state,
+and I love how frequently I get to say:
+
+    "Look, the first pascal program with multiple functions lifted into Coq!"
+
+    "Look, the first OCaml program automatically generated from Coq code that's been lifted from Pascal!"
+
+    "Look, the first proof about a pascal program automatically lifted into Coq!"
+    
+Even though these are things that have been done similarly for a 
+large number of other languages, it's very rewarding to be able
+to say that I've done these things, largely through my own effort.
+
+## Step 4 - Give Up
+
+This one's weird, and I'm actually hoping it doesn't happen on this
+project, but I'd be lying if I left it out of my development 
+process: whenever I get bored of a project, or I hit an improvement
+that is more than monumental to add, I will usually give up on it.
+There are a few reasons for this:
+
+1. I like working on things that interest me. Software engineering
+is not inherently interesting, but building things from the 
+ground-up is. So when I hit the late stages of a project, and the
+challenges turn from "learn how rendering pipelines work so you 
+can write a raytracer" into "refactor your raytracer into a 
+raymarcher so that you can add relativistic effects," I very
+quickly lose steam.
+2. My interests vary, not just in computer science. My project 
+ideas usually stem from overhearing or reading something, letting
+that roll around in my head for a few weeks, and then eventually
+putting it into action. Many times, these brain-rolling periods
+overlap, and as I'm working on "tedious problem #9" on project A,
+I begin to think about how I would solve "interesting problem #1"
+on project B, and then it isn't that I'm not still interested in
+project A, but project B is just so enticing that I can't resist.
+On rare occasions I've gone back to my project B's, and it's 
+very rewarding.
+3. Being just plain busy. This doesn't apply so much anymore, as 
+I've just graduated with my Bachelor's degree a few weeks ago,
+but many times I've had to give up a project for a week in order
+to study for an exam, write a lecture, maintain a social life, or
+a number of other things that students have to worry about. I hate
+these times, because one week is just enough time for me to forget 
+50% of the knowledge I'd gained but forgotten to write down in
+my source code, leading to me having to study code for a few days
+to get back to where I was, which isn't fun!
+

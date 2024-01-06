@@ -16,6 +16,8 @@ rule token = parse
     | ')'                           { RIGHT_PARENTHESIS }
     | '['                           { LEFT_BRACE }
     | ']'                           { RIGHT_BRACE }
+    | '<'                           { LEFT_BRACKET }
+    | '>'                           { RIGHT_BRACKET }
     | ':'                           { COLON }
     | ','                           { COMMA }
     | '='                           { EQUALS }
@@ -59,7 +61,6 @@ rule token = parse
     | "const"                       { CONST }
     | "left"                        { LEFT }
     | "tempinit"                    { TEMPINIT }
-    | '\n'                          { NEWLINE }
     | '\"' ((['\032' - '\126'] # ['\\' '"'])* as lxm) '\"'
                                     { STRING (lxm) }
     | number as lxm                 { NUMBER (int_of_string lxm) }
