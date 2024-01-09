@@ -97,6 +97,9 @@ let process_file fn =
 
 let read_tree original_fn use_preproc =
   let proc_fn = original_fn ^ ".proc" in
+  print_endline (string_of_bool use_preproc) ;
+  print_endline (string_of_bool (Sys.file_exists proc_fn)) ;
+  print_endline proc_fn ;
   let use_preprocessed = use_preproc && Sys.file_exists proc_fn in
   if use_preprocessed then (
     print_endline "Reading processed file..." ;

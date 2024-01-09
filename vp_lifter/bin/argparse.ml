@@ -32,7 +32,7 @@ let parse_arguments () =
   let speclist =
     Arg.
       [ ( "-fpc-args"
-        , Arg.Set_string fpc_flags
+        , Arg.String (fun s -> fpc_flags := String.concat " " [!fpc_flags; s])
         , "Args passed to FPC during compilation" )
       ; ( "-use-tree"
         , Arg.String
@@ -83,6 +83,7 @@ let parse_arguments () =
           ^ String.concat " " (List.tl (List.tl !files))
           ^ "]" )
   in
+  if !use_preproc then do_compile := false ;
   { fpc_flags= !fpc_flags
   ; input_fn
   ; output_fn

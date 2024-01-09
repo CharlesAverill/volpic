@@ -40,3 +40,23 @@ let contains s1 s2 =
     ignore (Str.search_forward re s1 0) ;
     true
   with Not_found -> false
+
+let string_before_substr str sub =
+  try
+    Str.string_before str
+      ( try Str.search_forward (Str.regexp_string sub) str 0
+        with Not_found ->
+          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+  with Not_found ->
+    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+
+let string_after_substr str sub =
+  try
+    Str.string_after str
+      ( try
+          Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
+          + String.length sub
+        with Not_found ->
+          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+  with Not_found ->
+    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)

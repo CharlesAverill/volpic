@@ -1,77 +1,239 @@
 open String_utils
 
 type parse_tree_node_type =
-  | Nothing
-  | Block
-  | Statement
-  | Call
-  | Assignment
-  | Load
-  | Ordconst
-  | Vec
-  | Tempcreate
-  | Tempref
-  | Typeconv
-  | Callpara
-  | Deref
-  | Tempdelete
-  | Stringconst
-  | For
-  | While
+  | Emptynode
+  | Add
   | Mul
   | Sub
-  | Subscript
-  | If
+  | Div
+  | Symdif
+  | Mod
+  | Assign
+  | Load
+  | Range
+  | Lt
+  | Lte
+  | Gt
+  | Gte
+  | Equal
   | Unequal
-  | Add
+  | In
+  | Or
+  | Xor
+  | Shr
+  | Shl
+  | Slash
+  | And
+  | Subscript
+  | Deref
+  | Addr
+  | Ordconst
+  | Typeconv
+  | Call
+  | Callpara
+  | Realconst
+  | Unaryminus
+  | Unaryplus
+  | Asm
+  | Vec
+  | Pointerconst
+  | Stringconst
+  | Not
+  | Inline
+  | Nil
+  | Error
+  | Type
+  | Setelement
+  | Setconst
+  | Block
+  | Statement
+  | If
+  | Break
+  | Continue
+  | Whilerepeat
+  | For
+  | Exit
+  | Case
+  | Label
+  | Goto
+  | Tryexcept
+  | Raise
+  | Tryfinally
+  | On
+  | Is
+  | As
+  | Starstar
+  | Arrayconstruct
+  | Arrayconstructrange
+  | Tempcreate
+  | Tempref
+  | Tempdelete
+  | Addopt
+  | Nothing
+  | Loadvmtaddr
+  | Guidconst
+  | Rtti
+  | Loadparentfp
+  | Objcselector
+  | Objcprotocol
+  | Specialize
+  | Finalizetemps
 
 let string_of_parse_tree_type = function
-  | Nothing ->
-      "nothingn"
-  | Block ->
-      "blockn"
-  | Statement ->
-      "statementn"
-  | Call ->
-      "calln"
-  | Assignment ->
-      "assignn"
-  | Load ->
-      "loadn"
-  | Ordconst ->
-      "ordconstn"
-  | Vec ->
-      "vecn"
-  | Tempcreate ->
-      "tempcreaten"
-  | Tempref ->
-      "temprefn"
-  | Typeconv ->
-      "typeconvn"
-  | Callpara ->
-      "callparan"
-  | Deref ->
-      "derefn"
-  | Tempdelete ->
-      "tempdeleten"
-  | Stringconst ->
-      "stringconstn"
-  | For ->
-      "forn"
-  | While ->
-      "whilen"
+  | Emptynode ->
+      "<emptynode>"
+  | Add ->
+      "addn"
   | Mul ->
       "muln"
   | Sub ->
       "subn"
-  | Subscript ->
-      "subscript"
-  | If ->
-      "ifn"
+  | Div ->
+      "divn"
+  | Symdif ->
+      "symdifn"
+  | Mod ->
+      "modn"
+  | Assign ->
+      "assignn"
+  | Load ->
+      "loadn"
+  | Range ->
+      "rangen"
+  | Lt ->
+      "ltn"
+  | Lte ->
+      "lten"
+  | Gt ->
+      "gtn"
+  | Gte ->
+      "gten"
+  | Equal ->
+      "equaln"
   | Unequal ->
       "unequaln"
-  | Add ->
-      "addn"
+  | In ->
+      "inn"
+  | Or ->
+      "orn"
+  | Xor ->
+      "xorn"
+  | Shr ->
+      "shrn"
+  | Shl ->
+      "shln"
+  | Slash ->
+      "slashn"
+  | And ->
+      "andn"
+  | Subscript ->
+      "subscriptn"
+  | Deref ->
+      "derefn"
+  | Addr ->
+      "addrn"
+  | Ordconst ->
+      "ordconstn"
+  | Typeconv ->
+      "typeconvn"
+  | Call ->
+      "calln"
+  | Callpara ->
+      "callparan"
+  | Realconst ->
+      "realconstn"
+  | Unaryminus ->
+      "unaryminusn"
+  | Unaryplus ->
+      "unaryplusn"
+  | Asm ->
+      "asmn"
+  | Vec ->
+      "vecn"
+  | Pointerconst ->
+      "pointerconstn"
+  | Stringconst ->
+      "stringconstn"
+  | Not ->
+      "notn"
+  | Inline ->
+      "inlinen"
+  | Nil ->
+      "niln"
+  | Error ->
+      "errorn"
+  | Type ->
+      "typen"
+  | Setelement ->
+      "setelementn"
+  | Setconst ->
+      "setconstn"
+  | Block ->
+      "blockn"
+  | Statement ->
+      "statementn"
+  | If ->
+      "ifn"
+  | Break ->
+      "breakn"
+  | Continue ->
+      "continuen"
+  | Whilerepeat ->
+      "whilerepeatn"
+  | For ->
+      "forn"
+  | Exit ->
+      "exitn"
+  | Case ->
+      "casen"
+  | Label ->
+      "labeln"
+  | Goto ->
+      "goton"
+  | Tryexcept ->
+      "tryexceptn"
+  | Raise ->
+      "raisen"
+  | Tryfinally ->
+      "tryfinallyn"
+  | On ->
+      "onn"
+  | Is ->
+      "isn"
+  | As ->
+      "asn"
+  | Starstar ->
+      "starstarn"
+  | Arrayconstruct ->
+      "arrayconstructn"
+  | Arrayconstructrange ->
+      "arrayconstructrangen"
+  | Tempcreate ->
+      "tempcreaten"
+  | Tempref ->
+      "temprefn"
+  | Tempdelete ->
+      "tempdeleten"
+  | Addopt ->
+      "addoptn"
+  | Nothing ->
+      "nothingn"
+  | Loadvmtaddr ->
+      "loadvmtaddrn"
+  | Guidconst ->
+      "guidconstn"
+  | Rtti ->
+      "rttin"
+  | Loadparentfp ->
+      "loadparentfpn"
+  | Objcselector ->
+      "objcselectorn"
+  | Objcprotocol ->
+      "objcprotocoln"
+  | Specialize ->
+      "specializen"
+  | Finalizetemps ->
+      "finalizetempsn"
 
 type range = Unbounded | Range of (int * int)
 
@@ -80,26 +242,6 @@ let string_of_range = function
       ""
   | Range (a, b) ->
       "[" ^ string_of_int a ^ ".." ^ string_of_int b ^ "]"
-
-let string_before_substr str sub =
-  try
-    Str.string_before str
-      ( try Str.search_forward (Str.regexp_string sub) str 0
-        with Not_found ->
-          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
-  with Not_found ->
-    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
-
-let string_after_substr str sub =
-  try
-    Str.string_after str
-      ( try
-          Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
-          + String.length sub
-        with Not_found ->
-          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
-  with Not_found ->
-    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
 let range_of_string s =
   if s = "" then Unbounded
@@ -216,7 +358,11 @@ let rec string_of_return_type_root = function
       ^ "Array" ^ string_of_range r ^ " Of "
       ^ string_of_return_type (RT rt)
   | Procedure (id, args) ->
-      id ^ "(" ^ String.concat ";" (List.map string_of_return_type args) ^ ")"
+      id
+      ^
+      if List.length args <> 0 then
+        "(" ^ String.concat ";" (List.map string_of_return_type args) ^ ")"
+      else ";"
   | Function (id, args, rt) ->
       Printf.sprintf "%s(%s):%s" id
         (String.concat ";" (List.map string_of_return_type args))
@@ -342,50 +488,221 @@ let loc_of_string s =
       failwith ("Unknown loc " ^ s)
 
 type flag =
-  | Nf_explicit
-  | Nf_internal
+  | Nf_swapable
+  | Nf_swapped
+  | Nf_error
+  | Nf_pass1_done
   | Nf_write
+  | Nf_modify
+  | Nf_address_taken
+  | Nf_is_funcret
+  | Nf_isproperty
+  | Nf_processing
+  | Nf_no_lvalue
+  | Nf_usercode_entry
+  | Nf_no_checkpointer
+  | Nf_memindex
+  | Nf_memseg
   | Nf_callunique
   | Nf_absolute
+  | Nf_is_currency
+  | Nf_has_pointerdiv
+  | Nf_short_bool
+  | Nf_isomod
+  | Nf_assign_done_in_right
+  | Nf_forcevaria
+  | Nf_novariaallowed
+  | Nf_explicit
+  | Nf_internal
+  | Nf_load_procvar
+  | Nf_inlineconst
+  | Nf_get_asm_position
+  | Nf_block_with_exit
+  | Nf_ignore_for_wpo
+  | Nf_generic_para
+  | Nf_do_not_execute
   | Ti_may_be_in_reg
+  | Ti_addr_taken
+  | Ti_reference
+  | Ti_readonly
+  | Ti_no_final_regsync
+  | Ti_nofini
+  | Ti_const
 
 let string_of_flag = function
-  | Nf_explicit ->
-      "nf_explicit"
-  | Nf_internal ->
-      "nf_internal"
+  | Nf_swapable ->
+      "nf_swapable"
+  | Nf_swapped ->
+      "nf_swapped"
+  | Nf_error ->
+      "nf_error"
+  | Nf_pass1_done ->
+      "nf_pass1_done"
   | Nf_write ->
       "nf_write"
-  | Ti_may_be_in_reg ->
-      "ti_may_be_in_reg"
+  | Nf_modify ->
+      "nf_modify"
+  | Nf_address_taken ->
+      "nf_address_taken"
+  | Nf_is_funcret ->
+      "nf_is_funcret"
+  | Nf_isproperty ->
+      "nf_isproperty"
+  | Nf_processing ->
+      "nf_processing"
+  | Nf_no_lvalue ->
+      "nf_no_lvalue"
+  | Nf_usercode_entry ->
+      "nf_usercode_entry"
+  | Nf_no_checkpointer ->
+      "nf_no_checkpointer"
+  | Nf_memindex ->
+      "nf_memindex"
+  | Nf_memseg ->
+      "nf_memseg"
   | Nf_callunique ->
       "nf_callunique"
   | Nf_absolute ->
       "nf_absolute"
+  | Nf_is_currency ->
+      "nf_is_currency"
+  | Nf_has_pointerdiv ->
+      "nf_has_pointerdiv"
+  | Nf_short_bool ->
+      "nf_short_bool"
+  | Nf_isomod ->
+      "nf_isomod"
+  | Nf_assign_done_in_right ->
+      "nf_assign_done_in_right"
+  | Nf_forcevaria ->
+      "nf_forcevaria"
+  | Nf_novariaallowed ->
+      "nf_novariaallowed"
+  | Nf_explicit ->
+      "nf_explicit"
+  | Nf_internal ->
+      "nf_internal"
+  | Nf_load_procvar ->
+      "nf_load_procvar"
+  | Nf_inlineconst ->
+      "nf_inlineconst"
+  | Nf_get_asm_position ->
+      "nf_get_asm_position"
+  | Nf_block_with_exit ->
+      "nf_block_with_exit"
+  | Nf_ignore_for_wpo ->
+      "nf_ignore_for_wpo"
+  | Nf_generic_para ->
+      "nf_generic_para"
+  | Nf_do_not_execute ->
+      "nf_do_not_execute"
+  | Ti_may_be_in_reg ->
+      "ti_may_be_in_reg"
+  | Ti_addr_taken ->
+      "ti_addr_taken"
+  | Ti_reference ->
+      "ti_reference"
+  | Ti_readonly ->
+      "ti_readonly"
+  | Ti_no_final_regsync ->
+      "ti_no_final_regsync"
+  | Ti_nofini ->
+      "ti_nofini"
+  | Ti_const ->
+      "ti_const"
 
 let string_of_flags f =
   "[" ^ String.concat "," (List.map string_of_flag f) ^ "]"
 
 let flag_of_string s =
   match s with
-  | "nf_explicit" ->
-      Nf_explicit
-  | "nf_internal" ->
-      Nf_internal
-  | "ti_may_be_in_reg" ->
-      Ti_may_be_in_reg
+  | "nf_swapable" ->
+      Nf_swapable
+  | "nf_swapped" ->
+      Nf_swapped
+  | "nf_error" ->
+      Nf_error
+  | "nf_pass1_done" ->
+      Nf_pass1_done
   | "nf_write" ->
       Nf_write
+  | "nf_modify" ->
+      Nf_modify
+  | "nf_address_taken" ->
+      Nf_address_taken
+  | "nf_is_funcret" ->
+      Nf_is_funcret
+  | "nf_isproperty" ->
+      Nf_isproperty
+  | "nf_processing" ->
+      Nf_processing
+  | "nf_no_lvalue" ->
+      Nf_no_lvalue
+  | "nf_usercode_entry" ->
+      Nf_usercode_entry
+  | "nf_no_checkpointer" ->
+      Nf_no_checkpointer
+  | "nf_memindex" ->
+      Nf_memindex
+  | "nf_memseg" ->
+      Nf_memseg
   | "nf_callunique" ->
       Nf_callunique
   | "nf_absolute" ->
       Nf_absolute
+  | "nf_is_currency" ->
+      Nf_is_currency
+  | "nf_has_pointerdiv" ->
+      Nf_has_pointerdiv
+  | "nf_short_bool" ->
+      Nf_short_bool
+  | "nf_isomod" ->
+      Nf_isomod
+  | "nf_assign_done_in_right" ->
+      Nf_assign_done_in_right
+  | "nf_forcevaria" ->
+      Nf_forcevaria
+  | "nf_novariaallowed" ->
+      Nf_novariaallowed
+  | "nf_explicit" ->
+      Nf_explicit
+  | "nf_internal" ->
+      Nf_internal
+  | "nf_load_procvar" ->
+      Nf_load_procvar
+  | "nf_inlineconst" ->
+      Nf_inlineconst
+  | "nf_get_asm_position" ->
+      Nf_get_asm_position
+  | "nf_block_with_exit" ->
+      Nf_block_with_exit
+  | "nf_ignore_for_wpo" ->
+      Nf_ignore_for_wpo
+  | "nf_generic_para" ->
+      Nf_generic_para
+  | "nf_do_not_execute" ->
+      Nf_do_not_execute
+  | "ti_may_be_in_reg" ->
+      Ti_may_be_in_reg
+  | "ti_addr_taken" ->
+      Ti_addr_taken
+  | "ti_reference" ->
+      Ti_reference
+  | "ti_readonly" ->
+      Ti_readonly
+  | "ti_no_final_regsync" ->
+      Ti_no_final_regsync
+  | "ti_nofini" ->
+      Ti_nofini
+  | "ti_const" ->
+      Ti_const
   | _ ->
       failwith ("Unknown flag " ^ s)
 
 type pt_vtype =
   | Blank
   | Integer of int
+  | Float of float
   | Str of string
   | ProcFunc of
       ( string (* identifier *)
@@ -399,6 +716,8 @@ let rec string_of_vtype = function
       ""
   | Integer i ->
       string_of_int i
+  | Float f ->
+      string_of_float f
   | Str s ->
       s
   | List l ->

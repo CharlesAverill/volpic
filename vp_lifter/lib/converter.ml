@@ -98,7 +98,7 @@ and find_parans l =
 
 let rec stmt_of_parse_tree parse_tree =
   match parse_tree.pt_type with
-  | Assignment ->
+  | Assign ->
       if (List.hd parse_tree.children).pt_type = Tempref then Nothing
       else
         Assignment

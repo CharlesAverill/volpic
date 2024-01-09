@@ -21,6 +21,12 @@ begin
   test.b3 := 'world';
 end;
 
+procedure initialize;
+begin
+  writeln('hello world');
+end;
+
 begin
 	x := test;
+  initialize;
 end.

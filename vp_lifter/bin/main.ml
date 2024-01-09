@@ -7,8 +7,8 @@ open Filename
 
 let get_parse_trees args =
   let dir = Sys.getcwd () in
+  Sys.chdir (dirname args.input_fn) ;
   if args.do_compile then (
-    Sys.chdir (dirname args.input_fn) ;
     let cmd =
       String.concat " "
         [args.fpc_path; "-vp"; args.fpc_flags; basename args.input_fn]
@@ -22,8 +22,7 @@ let get_parse_trees args =
           ( "Tree generation command `" ^ cmd ^ "` failed with exit code "
           ^ string_of_int n ) ) ;
   let parse_trees = read_tree args.tree_log args.use_preproc in
-  if args.do_compile then Sys.chdir dir ;
-  parse_trees
+  Sys.chdir dir ; parse_trees
 
 let () =
   let args = parse_arguments () in

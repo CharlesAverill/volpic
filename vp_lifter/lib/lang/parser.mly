@@ -2,18 +2,23 @@
     open Vp_lifter.Parse_tree
 %}
 
-%token BLOCKN NOTHINGN STATEMENTN CALLN ASSIGNN LOADN ORDCONSTN VECN TEMPCREATEN 
-    TEMPREFN TYPECONVN CALLPARAN DEREFN TEMPDELETEN STRINGCONSTN FORN WHILEN MULN
-    SUBN SUBSCRIPTN IFN UNEQUALN ADDN
-%token <string> IDENTIFIER
-%token <string> STRING
+%token EMPTYNODE ADDN MULN SUBN DIVN SYMDIFN MODN ASSIGNN LOADN RANGEN LTN LTEN 
+    GTN GTEN EQUALN UNEQUALN INN ORN XORN SHRN SHLN SLASHN ANDN SUBSCRIPTN DEREFN 
+    ADDRN ORDCONSTN TYPECONVN CALLN CALLPARAN REALCONSTN UNARYMINUSN UNARYPLUSN 
+    ASMN VECN POINTERCONSTN STRINGCONSTN NOTN INLINEN NILN ERRORN TYPEN SETELEMENTN 
+    SETCONSTN BLOCKN STATEMENTN IFN BREAKN CONTINUEN WHILEREPEATN FORN EXITN CASEN 
+    LABELN GOTON TRYEXCEPTN RAISEN TRYFINALLYN ONN ISN ASN STARSTARN ARRAYCONSTRUCTN 
+    ARRAYCONSTRUCTRANGEN TEMPCREATEN TEMPREFN TEMPDELETEN ADDOPTN NOTHINGN LOADVMTADDRN 
+    GUIDCONSTN RTTIN LOADPARENTFPN OBJCSELECTORN OBJCPROTOCOLN SPECIALIZEN FINALIZETEMPSN
+%token <string> IDENTIFIER STRING HEX NONSEMI
 %token <int>    NUMBER
-%token <string> HEX
+%token <float>  FLOAT
 
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_BRACE RIGHT_BRACE LEFT_BRACKET RIGHT_BRACKET
+    TICK
 %token COMMA EQUALS DOLLAR CARROT SEMICOLON COLON DOT
 %token NIL RESULTDEF POS LOC EXPECTLOC FLAGS CMPLX NILBRACKETS VAR CONST NOTYPESYM
-    LEFT TEMPINIT
+    LEFT TEMPINIT CASEBLOCK BLOCKID ELSE OUT BRACEOPEN ARRAY OF FORMAL_TYPE
 %token EOF
 
 %start main
@@ -46,6 +51,18 @@ node_list : { [] }
 
 node :
     label NIL { None } |
+    label = label
+    LEFT_PARENTHESIS CASEBLOCK BLOCKID COLON num = NUMBER n = node RIGHT_PARENTHESIS {
+        match n with
+        | Some n' -> Some { n' with data = (("caseblock_blockid", Integer num) :: n'.data); label = label }
+        | None -> None
+    } |
+    label = label
+    LEFT_PARENTHESIS ELSE COLON num = NUMBER n = node RIGHT_PARENTHESIS {
+        match n with
+        | Some n' -> Some { n' with data = (("caseblock_else", Integer num) :: n'.data); label = label }
+        | None -> None
+    } |
     label = label 
     LEFT_PARENTHESIS 
         nt = node_type COMMA
@@ -53,7 +70,7 @@ node :
         POS EQUALS LEFT_PARENTHESIS ln = NUMBER COMMA cn = NUMBER RIGHT_PARENTHESIS COMMA
         LOC EQUALS loc = IDENTIFIER COMMA
         EXPECTLOC EQUALS eloc = IDENTIFIER COMMA
-        FLAGS EQUALS flags = flags COMMA?
+        FLAGS EQUALS flags = flags 
         cmplx = cmplx?
         opts = optionals?
         ndl = node_data_list
@@ -96,33 +113,88 @@ opt_list :  { [] }
     | IDENTIFIER COMMA opt_list { $1 :: $3}
 
 node_type :
-      NOTHINGN      { Nothing }
-    | BLOCKN        { Block }
-    | STATEMENTN    { Statement }
-    | CALLN         { Call }
-    | ASSIGNN       { Assignment }
-    | LOADN         { Load }
-    | ORDCONSTN     { Ordconst }
-    | VECN          { Vec }
-    | TEMPCREATEN   { Tempcreate }
-    | TEMPREFN      { Tempref }
-    | TYPECONVN     { Typeconv }
-    | CALLPARAN     { Callpara }
-    | DEREFN        { Deref }
-    | TEMPDELETEN   { Tempdelete }
-    | STRINGCONSTN  { Stringconst }
-    | FORN          { For }
-    | WHILEN        { While }
-    | MULN          { Mul }
-    | SUBN          { Sub }
-    | SUBSCRIPTN    { Subscript }
-    | IFN           { If }
-    | UNEQUALN      { Unequal }
-    | ADDN          { Add }
+      EMPTYNODE           { Emptynode }
+    | ADDN                { Add }
+    | MULN                { Mul }
+    | SUBN                { Sub }
+    | DIVN                { Div }
+    | SYMDIFN             { Symdif }
+    | MODN                { Mod }
+    | ASSIGNN             { Assign }
+    | LOADN               { Load }
+    | RANGEN              { Range }
+    | LTN                 { Lt }
+    | LTEN                { Lte }
+    | GTN                 { Gt }
+    | GTEN                { Gte }
+    | EQUALN              { Equal }
+    | UNEQUALN            { Unequal }
+    | INN                 { In }
+    | ORN                 { Or }
+    | XORN                { Xor }
+    | SHRN                { Shr }
+    | SHLN                { Shl }
+    | SLASHN              { Slash }
+    | ANDN                { And }
+    | SUBSCRIPTN          { Subscript }
+    | DEREFN              { Deref }
+    | ADDRN               { Addr }
+    | ORDCONSTN           { Ordconst }
+    | TYPECONVN           { Typeconv }
+    | CALLN               { Call }
+    | CALLPARAN           { Callpara }
+    | REALCONSTN          { Realconst }
+    | UNARYMINUSN         { Unaryminus }
+    | UNARYPLUSN          { Unaryplus }
+    | ASMN                { Asm }
+    | VECN                { Vec }
+    | POINTERCONSTN       { Pointerconst }
+    | STRINGCONSTN        { Stringconst }
+    | NOTN                { Not }
+    | INLINEN             { Inline }
+    | NILN                { Nil }
+    | ERRORN              { Error }
+    | TYPEN               { Type }
+    | SETELEMENTN         { Setelement }
+    | SETCONSTN           { Setconst }
+    | BLOCKN              { Block }
+    | STATEMENTN          { Statement }
+    | IFN                 { If }
+    | BREAKN              { Break }
+    | CONTINUEN           { Continue }
+    | WHILEREPEATN        { Whilerepeat }
+    | FORN                { For }
+    | EXITN               { Exit }
+    | CASEN               { Case }
+    | LABELN              { Label }
+    | GOTON               { Goto }
+    | TRYEXCEPTN          { Tryexcept }
+    | RAISEN              { Raise }
+    | TRYFINALLYN         { Tryfinally }
+    | ONN                 { On }
+    | ISN                 { Is }
+    | ASN                 { As }
+    | STARSTARN           { Starstar }
+    | ARRAYCONSTRUCTN     { Arrayconstruct }
+    | ARRAYCONSTRUCTRANGEN{ Arrayconstructrange }
+    | TEMPCREATEN         { Tempcreate }
+    | TEMPREFN            { Tempref }
+    | TEMPDELETEN         { Tempdelete }
+    | ADDOPTN             { Addopt }
+    | NOTHINGN            { Nothing }
+    | LOADVMTADDRN        { Loadvmtaddr }
+    | GUIDCONSTN          { Guidconst }
+    | RTTIN               { Rtti }
+    | LOADPARENTFPN       { Loadparentfp }
+    | OBJCSELECTORN       { Objcselector }
+    | OBJCPROTOCOLN       { Objcprotocol }
+    | SPECIALIZEN         { Specialize }
+    | FINALIZETEMPSN      { Finalizetemps }
 
 resultdef :
       RESULTDEF EQUALS IDENTIFIER           { $3 }
     | RESULTDEF EQUALS DOLLAR IDENTIFIER EQUALS STRING { $6 }
+    | RESULTDEF EQUALS IDENTIFIER EQUALS STRING { $5 }
     | RESULTDEF EQUALS typestr EQUALS STRING    { if $5 = "<record type>" then $3 ^ $5 else $5 }
     | RESULTDEF EQUALS NILBRACKETS          { "<nil>" }
 
@@ -151,11 +223,14 @@ data_val :
       IDENTIFIER    { Str $1 }
     | STRING        { Str $1 }
     | NUMBER        { Integer $1 }
+    | FLOAT         { Float $1 }
     | IDENTIFIER EQUALS STRING  { Str $3 }
     | DOLLAR IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $2 ^ ":" ^ $4) }
-    | DOLLAR IDENTIFIER ptypestr SEMICOLON { ProcFunc ($2, $3, "") }
     | IDENTIFIER SEMICOLON { ProcFunc ($1, "", "") }
+    | DOLLAR IDENTIFIER SEMICOLON { ProcFunc ($2, "", "") }
     | IDENTIFIER COLON typestr SEMICOLON { Str ("$" ^ $1 ^ ":" ^ $3) }
+    | DOLLAR IDENTIFIER ptypestr SEMICOLON { ProcFunc ($2, $3, "") }
+    | DOLLAR IDENTIFIER ptypestr COLON qualified_type SEMICOLON { ProcFunc ($2, $3, $5) }
     | IDENTIFIER ptypestr SEMICOLON { ProcFunc ($1, $2, "") }
     | IDENTIFIER ptypestr COLON qualified_type SEMICOLON { ProcFunc ($1, $2, $4) }
     | DOLLAR HEX        { Integer (int_of_string ("0x" ^ (Str.string_after $2 1))) }
@@ -168,17 +243,23 @@ data_seq :
 typestr :
         qualified_type      { $1 }
       | ptypestr            { $1 }
-      | NOTYPESYM           { "" }
-      | typestr DOT typestr { $1 ^ "." ^ $3 }
+    //   | typestr DOT typestr { $1 ^ "." ^ $3 }
 
 ptypestr : LEFT_PARENTHESIS separated_list(SEMICOLON, qualified_type) RIGHT_PARENTHESIS { String.concat ";" $2 }
 
 qualified_type :
       typestrptr        { $1 }
-    | VAR typestrptr    { $2 }
-    | CONST typestrptr  { $2 }
+    | VAR qualified_type    { $2 }
+    | CONST qualified_type  { $2 }
+    | OUT qualified_type    { $2 }
     | LEFT_BRACKET qualified_type RIGHT_BRACKET { $2 }
+    | qualified_type DOT qualified_type { $1 ^ "." ^ $3 }
+    | typestrptr EQUALS TICK typestrptr TICK { $1 ^ "=" ^ $4 }
+    | NOTYPESYM     { "" }
 
-typestrptr :
+typestrptr : 
       IDENTIFIER    { $1 }
     | CARROT typestr   { "^" ^ $2 }
+    | ARRAY OF typestr              { "Array of " ^ $3 }
+    | BRACEOPEN ARRAY OF typestr    { "Array of " ^ $4 }
+    | FORMAL_TYPE                   { "Formal type" }
