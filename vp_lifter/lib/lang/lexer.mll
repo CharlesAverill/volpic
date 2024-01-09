@@ -134,7 +134,7 @@ rule token = parse
                                         (fun acc s -> 
                                              if contains acc s then string_before_substr acc s else acc) 
                                         lxm ["E"] )
-                                      in print_endline (x ^ " " ^ lxm);
+                                      in
                                         FLOAT (float_of_string x) }
     | ident                         { IDENTIFIER (lexeme lexbuf) }
     | hex as lxm                    { HEX (lxm) }

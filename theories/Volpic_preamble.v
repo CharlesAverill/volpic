@@ -12,6 +12,7 @@ Definition id_type := string.
 Inductive value : Type :=
 | VNull
 | VInteger   (n : Z)
+| VBool      (b : bool)
 | VString    (s : string).
 
 Definition store : Type := (list id_type * (id_type -> value)).
@@ -42,6 +43,12 @@ Definition get_string (VOLPIC_store : store) (s : id_type) :=
     match sf_get VOLPIC_store s with
     | VString s => s
     | _ => EmptyString
+    end.
+
+Definition get_bool (VOLPIC_store : store) (s : id_type) :=
+    match sf_get VOLPIC_store s with
+    | VBool b => b
+    | _ => false
     end.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=

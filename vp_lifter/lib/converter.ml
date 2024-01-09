@@ -9,6 +9,8 @@ type expr =
   | String of string
   | Add of expr * expr
   | Sub of expr * expr
+  | Gt of expr * expr
+  | Lt of expr * expr
   | ProcCall of (id_type * expr list)
   (* identifier, return type, args *)
   | FuncCall of (id_type * return_type_root * expr list)
@@ -18,6 +20,7 @@ type stmt =
   | Assignment of (id_type * expr)
   | Sequence of stmt list
   | SideEffect of expr
+  | IfThenElse of (expr * stmt * stmt)
 
 type gallina =
   | Root of parse_tree_node * gallina
@@ -54,6 +57,14 @@ let rec expr_of_parse_tree parse_tree =
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Sub ->
       Sub
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Gt ->
+      Gt
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Lt ->
+      Lt
         ( expr_of_parse_tree (List.hd parse_tree.children)
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Typeconv ->
@@ -110,6 +121,18 @@ let rec stmt_of_parse_tree parse_tree =
       stmt_of_parse_tree (List.hd parse_tree.children)
   | Nothing | Tempcreate | Tempdelete ->
       Nothing
+  | If ->
+      (*
+        First child - Condition
+        Second child - Positive Case
+        Third child - Negative Case
+      *)
+      IfThenElse
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , stmt_of_parse_tree (List.nth parse_tree.children 1)
+        , if List.length parse_tree.children > 2 then
+            stmt_of_parse_tree (List.nth parse_tree.children 2)
+          else Nothing )
   | Call ->
       SideEffect
         (let proc = find_data parse_tree.data "proc" in

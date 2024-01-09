@@ -10,6 +10,8 @@ let id_expr_constr = "Identifier"
 
 let int_expr_constr = "VInteger"
 
+let bool_expr_constr = "VBool"
+
 let str_expr_constr = "VString"
 
 let unit_expr_constr = "VUnit"

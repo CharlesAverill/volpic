@@ -54,7 +54,7 @@ let extraction fn lang path =
   in
   String.concat "" ["Extraction \""; path; "\" main."]
 
-type coq_type = Error | Z | String | Unit | Record
+type coq_type = Error | Z | String | Unit | Record | Bool
 
 let string_of_coq_type = function
   | Z ->
@@ -65,6 +65,8 @@ let string_of_coq_type = function
       "unit"
   | Record ->
       "record"
+  | Bool ->
+      "bool"
   | Error ->
       failwith "Tried to get string of error coq type"
 
@@ -92,6 +94,8 @@ let type_of_expr = function
       !gamma id
   | Integer _ | Add _ | Sub _ ->
       Z
+  | Gt _ | Lt _ ->
+      Bool
   | String _ ->
       String
   | ProcCall _ ->
@@ -119,6 +123,10 @@ let rec string_of_expr x shallow =
       binop "+" e1 e2
   | Sub (e1, e2) ->
       binop "-" e1 e2
+  | Gt (e1, e2) ->
+      binop ">?" e1 e2
+  | Lt (e1, e2) ->
+      binop "<?" e1 e2
   | ProcCall (id, e) ->
       String.concat " "
         ( sanitize_id id
@@ -153,6 +161,8 @@ let rec string_of_expr x shallow =
 and coq_type_getter = function
   | Z ->
       "get_int"
+  | Bool ->
+      "get_bool"
   | String ->
       "get_string"
   | Record ->
@@ -172,6 +182,8 @@ let store_string_of_expr e =
             id_expr_constr
         | Integer _ | Add _ | Sub _ ->
             int_expr_constr
+        | Gt _ | Lt _ ->
+            bool_expr_constr
         | String _ ->
             str_expr_constr
         | ProcCall _ ->
@@ -198,7 +210,7 @@ let rec string_of_stmt extract s =
   (* TODO : For function calls, clear the 'result' variable after using it *)
   let f : stmt -> string = function
     | Nothing ->
-        comment "nothingn statement"
+        (* comment "nothingn statement" *) ""
     | Assignment (id, expr) -> (
       match type_of_expr expr with
       | Record ->
@@ -215,13 +227,21 @@ let rec string_of_stmt extract s =
         String.concat "\n\t"
           ( comment
               ("Block: next " ^ string_of_int (List.length l) ^ " statements")
-            :: List.map (string_of_stmt extract) l
+            :: remove_empties (List.map (string_of_stmt extract) l)
           @ [store_name] )
     | SideEffect e ->
         if e = Nothing then ""
         else
           let content = letin store_name (string_of_expr e false) in
           if extract then content else comment content
+    | IfThenElse (e, st, sf) ->
+        String.concat " "
+          [ "if"
+          ; string_of_expr e false
+          ; "then"
+          ; string_of_stmt extract st
+          ; "else"
+          ; (if sf = Nothing then store_name else string_of_stmt extract sf) ]
   in
   f s
 
@@ -233,9 +253,7 @@ let rec all_ids_in_expr : expr -> string list = function
       []
   | Identifier id ->
       [id]
-  | Add (e1, e2) ->
-      all_ids_in_expr e1 @ all_ids_in_expr e2
-  | Sub (e1, e2) ->
+  | Add (e1, e2) | Sub (e1, e2) | Gt (e1, e2) | Lt (e1, e2) ->
       all_ids_in_expr e1 @ all_ids_in_expr e2
   | ProcCall (_, e) | FuncCall (_, _, e) ->
       List.concat (List.map all_ids_in_expr e)
@@ -252,6 +270,8 @@ let rec all_ids_in_stmt : stmt -> string list = function
       List.concat (List.map all_ids_in_stmt l)
   | SideEffect expr ->
       all_ids_in_expr expr
+  | IfThenElse (expr, st, sf) ->
+      all_ids_in_expr expr @ all_ids_in_stmt st @ all_ids_in_stmt sf
 
 (*
    Wrapper for string_of_stmt that adds a "poison check," essentially capturing
