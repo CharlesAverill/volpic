@@ -28,3 +28,6 @@ theories/.Makefile.d
 peda-session*
 tree.log
 tree.log.proc
+*.mli
+a.out
+theories/a.out

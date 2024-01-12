@@ -2,13 +2,12 @@ program Print5;
 
 var
 	x: cardinal;
+  y: cardinal;
 
 begin
-  x := 6;
-  if x < 5 then
-    x := 1
-  else if x > 5 then
-    x := 2
-  else
-    x := 3
+  for x := 0 to 5 do
+    y := x + y;
+  for x := 5 downto 0 do
+    y := x + y;
+  writeln(y);
 end.

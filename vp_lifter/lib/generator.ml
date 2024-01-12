@@ -81,11 +81,11 @@ let update_typctx id value =
 
 let type_of_return_type_root r =
   match r with
-  | Dword | LongWord ->
+  | Dword | LongWord | StrNumber ->
       Z
   | Record _ ->
       Record
-  | _ ->
+  | _ -> 
       failwith ("Haven't set coq type for RTR " ^ string_of_return_type_root r)
 
 (* This returns a string containing the Coq type representation of a variable *)
@@ -105,12 +105,18 @@ let type_of_expr = function
   | Nothing ->
       Unit
 
-let rec string_of_expr x shallow =
+let lcontains l i = List.exists (fun x -> x = i) l
+
+let rec string_of_expr x shallow bound_vars =
   let binop op e1 e2 =
-    string_of_expr e1 shallow ^ " " ^ op ^ " " ^ string_of_expr e2 shallow
+    string_of_expr e1 shallow bound_vars
+    ^ " " ^ op ^ " "
+    ^ string_of_expr e2 shallow bound_vars
   in
   match x with
   | Identifier id ->
+      (* if lcontains bound_vars id then id
+         else *)
       String.concat " "
         [ (if shallow then "" else coq_expr_type_getter (Identifier id))
         ; store_name
@@ -134,7 +140,7 @@ let rec string_of_expr x shallow =
              ( store_name
              :: List.map
                   (fun s ->
-                    let se = string_of_expr s shallow in
+                    let se = string_of_expr s shallow bound_vars in
                     if contains se " " then parens se else se )
                   e ) )
   | FuncCall (id, rt, e) ->
@@ -150,7 +156,9 @@ let rec string_of_expr x shallow =
                            ( store_name
                            :: List.map
                                 (fun s ->
-                                  let se = string_of_expr s shallow in
+                                  let se =
+                                    string_of_expr s shallow bound_vars
+                                  in
                                   if contains se " " then parens se else se )
                                 e ) ) )
                ^ match rt with Record _ -> "" | _ -> " " ^ stringify "result" )
@@ -174,7 +182,7 @@ and coq_type_getter = function
 
 and coq_expr_type_getter e = coq_type_getter (type_of_expr e)
 
-let store_string_of_expr e =
+let store_string_of_expr e bound_vars =
   "("
   ^ String.concat " "
       [ ( match e with
@@ -202,11 +210,11 @@ let store_string_of_expr e =
         | Nothing ->
             failwith "Shouldn't be trying to store a Nothing" )
       ; "("
-      ; string_of_expr e false
+      ; string_of_expr e false bound_vars
       ; ")" ]
   ^ ")"
 
-let rec string_of_stmt extract s =
+let rec string_of_stmt (extract : bool) bound_vars s =
   (* TODO : For function calls, clear the 'result' variable after using it *)
   let f : stmt -> string = function
     | Nothing ->
@@ -214,34 +222,100 @@ let rec string_of_stmt extract s =
     | Assignment (id, expr) -> (
       match type_of_expr expr with
       | Record ->
+          (* Need to find a way to unfold record fields into input variables? Idk *)
           String.concat " "
             [ "update_record"
             ; store_name
             ; stringify id
-            ; string_of_expr expr false ]
+            ; string_of_expr expr false bound_vars ]
       | _ ->
           update_typctx id (type_of_expr expr) ;
           String.concat " "
-            ["update"; store_name; stringify id; store_string_of_expr expr] )
+            [ "update"
+            ; store_name
+            ; stringify id
+            ; store_string_of_expr expr bound_vars ] )
     | Sequence l ->
         String.concat "\n\t"
           ( comment
               ("Block: next " ^ string_of_int (List.length l) ^ " statements")
-            :: remove_empties (List.map (string_of_stmt extract) l)
+            :: remove_empties (List.map (string_of_stmt extract bound_vars) l)
           @ [store_name] )
+    | ForLoop (id, el, eh, lb) ->
+        (* Check for bound variables *)
+        (* Currently, if X is loop iter, lifter will generate (get_int store "VP_X" which is wrong) *)
+        update_typctx id Z ;
+        let bound_vars = id :: bound_vars in
+        String.concat " "
+          [ letin "bounds_op"
+              ( match (el, eh) with
+              | Integer eli, Integer ehi ->
+                  if eli < ehi then "Z.leb" else "Z.geb"
+              | _ ->
+                  failwith "Non-integer loop bounds not yet supported" )
+          ; letin store_name
+              (String.concat " "
+                 [ "update"
+                 ; store_name
+                 ; stringify id
+                 ; store_string_of_expr el bound_vars ] )
+          ; parens
+              (String.concat " "
+                 [ "fix"
+                 ; "loop"
+                 ; parens (vp_depth ^ " : nat") (* ; parens (id ^ " : Z") *)
+                 ; parens (store_name ^ " : store")
+                 ; ":="
+                 ; matchwith vp_depth
+                     [ ("O", "None")
+                     ; ( "S n'"
+                       , ifthenelse
+                           (String.concat " "
+                              [ "bounds_op"
+                              ; parens
+                                  ( coq_expr_type_getter (Identifier id)
+                                  ^ " " ^ store_name ^ " " ^ stringify id )
+                              ; string_of_expr eh false bound_vars ] )
+                           (String.concat " "
+                              [ letin store_name
+                                  (string_of_stmt extract bound_vars lb)
+                              ; letin store_name
+                                  (String.concat " "
+                                     [ "update"
+                                     ; store_name
+                                     ; stringify id
+                                     ; (let op : expr * expr -> expr =
+                                          match (el, eh) with
+                                          | Integer eli, Integer ehi ->
+                                              fun (e1, e2) ->
+                                                if eli < ehi then Add (e1, e2)
+                                                else Sub (e1, e2)
+                                          | _ ->
+                                              failwith
+                                                "Non-integer loop bounds not \
+                                                 yet supported"
+                                        in
+                                        parens
+                                          (store_string_of_expr
+                                             (op (Identifier id, Integer 1))
+                                             bound_vars ) ) ] )
+                              ; "loop"
+                              ; "n'" (* ; parens (id ^ " + 1") *)
+                              ; store_name ] )
+                           ("Some " ^ store_name) ) ] ] )
+          ; "1000%nat"
+          ; store_name ]
     | SideEffect e ->
         if e = Nothing then ""
         else
-          let content = letin store_name (string_of_expr e false) in
+          let content = letin store_name (string_of_expr e false bound_vars) in
           if extract then content else comment content
     | IfThenElse (e, st, sf) ->
-        String.concat " "
-          [ "if"
-          ; string_of_expr e false
-          ; "then"
-          ; string_of_stmt extract st
-          ; "else"
-          ; (if sf = Nothing then store_name else string_of_stmt extract sf) ]
+        ifthenelse
+          (string_of_expr e false bound_vars)
+          (string_of_stmt extract bound_vars st)
+          ( if sf = Nothing then store_name
+            else string_of_stmt extract bound_vars sf )
   in
   f s
 
@@ -270,8 +344,12 @@ let rec all_ids_in_stmt : stmt -> string list = function
       List.concat (List.map all_ids_in_stmt l)
   | SideEffect expr ->
       all_ids_in_expr expr
+  | ForLoop (_, el, eh, lb) ->
+      all_ids_in_expr el @ all_ids_in_expr eh @ all_ids_in_stmt lb
   | IfThenElse (expr, st, sf) ->
       all_ids_in_expr expr @ all_ids_in_stmt st @ all_ids_in_stmt sf
+
+let runtime_check = function ForLoop _ -> true | _ -> false
 
 (*
    Wrapper for string_of_stmt that adds a "poison check," essentially capturing
@@ -279,38 +357,43 @@ let rec all_ids_in_stmt : stmt -> string list = function
 
    - Undefined variable (not a runtime error, added for practice)
 *)
-let poison_check stmt extract =
+let poison_check stmt (extract : bool) bound_vars =
   (* TODO : For all stores in a statement, ensure that
      if the ident already exists, the type of its new value
      matches the type of its old value. If not, poisoned.
   *)
   letins [store_name; poison]
-    [ String.concat " "
-        [ "if"
-        ; "("
-        ; "andb"
-        ; "("
-        ; "negb"
-        ; poison
-        ; ")"
-        ; "("
-        ; "all_in_ids"
-        ; store_name
-        ; "["
-        ; String.concat ";"
-            (List.map (fun x -> stringify x) (all_ids_in_stmt stmt))
-        ; "]"
-        ; ")"
-        ; ")"
-        ; "then"
-        ; pair
-            (if stmt = Nothing then store_name else string_of_stmt extract stmt)
-            poison
-        ; "else"
-        ; pair store_name "true" ] ]
+    [ ifthenelse
+        (String.concat " "
+           [ "multi_ands"
+           ; square_braces
+               (String.concat " "
+                  [ "negb"
+                  ; poison
+                    (*";"
+                      ; "all_in_ids"
+                         ; store_name
+                           ; square_braces
+                               (String.concat ";"
+                                  (List.map
+                                     (fun x -> stringify x)
+                                     (all_ids_in_stmt stmt) ) ) *) ] ) ] )
+        ( if runtime_check stmt then
+            String.concat " "
+              [ matchwith
+                  (string_of_stmt extract bound_vars stmt)
+                  [ ("None", pair store_name "true")
+                  ; ("Some " ^ store_name ^ "'", pair (store_name ^ "'") poison)
+                  ] ]
+          else
+            pair
+              ( if stmt = Nothing then store_name
+                else string_of_stmt extract bound_vars stmt )
+              poison )
+        (pair store_name "true") ]
 
 (* Generate function/procedure definitions *)
-let rec _str_of_gal_aux extract = function
+let rec _str_of_gal_aux (extract : bool) bound_vars = function
   (* TODO : For functions, return should be original passed-in store with result var set,
      should naturally handle function scopes *)
   | Root (pt, gal) ->
@@ -345,14 +428,16 @@ let rec _str_of_gal_aux extract = function
             @ [":="; "\n\t"] )
       | _ ->
           failwith "Expected procedure or function as root node" )
-      ^ _str_of_gal_aux extract gal
+      ^ _str_of_gal_aux extract bound_vars gal
   | Sequence gl ->
       String.concat "\n\t"
         ( [letin poison "false"]
-        @ List.map (_str_of_gal_aux extract) gl
+        @ List.map (_str_of_gal_aux extract bound_vars) gl
         @ [store_name] )
   | Statement s ->
-      poison_check s extract
+      poison_check s extract bound_vars
+  | Comment s ->
+      comment s
 
 (* Entry function *)
 let string_of_gallina do_preamble fn extract extract_lang extract_path func_name
@@ -360,6 +445,6 @@ let string_of_gallina do_preamble fn extract extract_lang extract_path func_name
   String.concat "\n"
     (remove_empties
        [ (if do_preamble then preamble extract extract_lang else "")
-       ; _str_of_gal_aux extract g ^ "."
+       ; _str_of_gal_aux extract [] g ^ "."
        ; (if extract then extraction fn extract_lang extract_path else "") ] )
   ^ "\n"

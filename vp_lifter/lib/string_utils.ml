@@ -4,6 +4,10 @@ let id_prefix = "VP_"
 
 let store_name = id_prefix ^ "store"
 
+let vp_depth = id_prefix ^ "depth"
+
+let vp_preamble = "Volpic_preamble"
+
 let fresh_store = "fresh_store"
 
 let id_expr_constr = "Identifier"
@@ -32,7 +36,12 @@ let letin id expr = String.concat " " ["let"; id; ":="; expr; "in"]
 
 let letins ids exprs = letin (pairify ids) (pairify exprs)
 
-let parens s = "(" ^ s ^ ")"
+let has_parens s =
+  String.starts_with ~prefix:"(" s && String.ends_with ~suffix:")" s
+
+let parens s = if has_parens s then s else "(" ^ s ^ ")"
+
+let square_braces s = "[" ^ s ^ "]"
 
 let remove_empties = List.filter (fun s -> s <> "")
 
@@ -62,3 +71,19 @@ let string_after_substr str sub =
           failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
   with Not_found ->
     failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+
+let matchwith expr cases =
+  String.concat " "
+    ( ["match"; parens expr; "with"]
+    @ List.map (fun (constr, branch) -> "| " ^ constr ^ " => " ^ branch) cases
+    @ ["end"] )
+
+let ifthenelse condition pos neg =
+  String.concat " "
+    (remove_empties
+       [ "if"
+       ; parens condition
+       ; "then"
+       ; parens pos
+       ; (if neg <> "" then "else" else "")
+       ; (if neg <> "" then parens neg else "") ] )

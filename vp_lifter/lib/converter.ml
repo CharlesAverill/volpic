@@ -21,11 +21,14 @@ type stmt =
   | Sequence of stmt list
   | SideEffect of expr
   | IfThenElse of (expr * stmt * stmt)
+  (* Iterator, min, max, body *)
+  | ForLoop of (id_type * expr * expr * stmt)
 
 type gallina =
   | Root of parse_tree_node * gallina
   | Sequence of gallina list
   | Statement of stmt
+  | Comment of string
 
 let rec id_of_parse_tree parse_tree =
   match parse_tree.pt_type with
@@ -133,6 +136,16 @@ let rec stmt_of_parse_tree parse_tree =
         , if List.length parse_tree.children > 2 then
             stmt_of_parse_tree (List.nth parse_tree.children 2)
           else Nothing )
+  | For ->
+      ForLoop
+        ( ( match find_data (List.hd parse_tree.children).data "symbol" with
+          | Str s ->
+              s
+          | _ ->
+              failwith "Failed to find iterator symbol for loop" )
+        , expr_of_parse_tree (List.nth parse_tree.children 1)
+        , expr_of_parse_tree (List.nth parse_tree.children 2)
+        , stmt_of_parse_tree (List.nth parse_tree.children 3) )
   | Call ->
       SideEffect
         (let proc = find_data parse_tree.data "proc" in

@@ -2,6 +2,7 @@ open Lang.Read_tree
 open Vp_lifter.Parse_tree
 open Vp_lifter.Generator
 open Vp_lifter.Converter
+open Vp_lifter.String_utils
 open Argparse
 open Filename
 
@@ -42,11 +43,20 @@ let () =
   print_endline "Converting..." ;
   let gasts =
     List.mapi
-      (fun i ->
+      (fun i pt ->
         print_endline
           ( "Converting " ^ List.nth func_names i ^ " (" ^ string_of_int i ^ "/"
           ^ n_funcs ^ ")" ) ;
-        gallina_of_parse_tree 0 )
+        try gallina_of_parse_tree 0 pt
+        with Failure s ->
+          if contains s "not yet supported" then (
+            let err = "Failed to lift " ^ List.nth func_names i ^ ": " ^ s in
+            print_endline err ; Comment err )
+          else
+            let err =
+              "Failed to lift " ^ List.nth func_names i ^ ": Unknown error"
+            in
+            print_endline err ; Comment err )
       parse_trees
   in
   print_endline "Lifting..." ;

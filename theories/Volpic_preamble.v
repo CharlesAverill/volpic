@@ -5,8 +5,8 @@ Import ListNotations.
 Open Scope Z.
 Open Scope list_scope.
 
-Declare Scope volpic_scope.
-Open Scope volpic_scope.
+Declare Scope vp_scope.
+Open Scope vp_scope.
 Definition id_type := string.
 
 Inductive value : Type :=
@@ -66,7 +66,10 @@ Definition update_record (dest_store : store) (dest_prefix : id_type) (source_st
         )
     ) (sf_get source_store id)) record_ids dest_store.
 
-Close Scope volpic_scope.
+Definition multi_ands bl :=
+    List.fold_left andb bl true.
+
+Close Scope vp_scope.
 
 Require Import Coq.extraction.Extraction.
 Require Import ExtrOcamlBasic.
