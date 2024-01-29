@@ -167,6 +167,19 @@ that I'm thinking about it, wouldn't this need to happen anyways?
 
 Nevermind! That was easy enough to implement.
 
+It is now a few weeks later (Jan 29), I let this project sit for a bit while I did 
+some other work (and got stuck in airports for a week). I'm scaling back a bit and
+have decided to tackle the following features before I look at TeX/MF again:
+
+- Vectors/Arrays
+- While loops
+- Break statements
+
+My goal is to lift a simple algorithms test and then verify the correctness of
+a bubble sort, a linear search, and a binary search. I hope to have these done
+before February 7th, when I'll be presenting this research at the Dallas Hackers'
+Association as my final talk there.
+
 # Correctness
 
 # Verification

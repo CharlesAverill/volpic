@@ -10,7 +10,7 @@
     LABELN GOTON TRYEXCEPTN RAISEN TRYFINALLYN ONN ISN ASN STARSTARN ARRAYCONSTRUCTN 
     ARRAYCONSTRUCTRANGEN TEMPCREATEN TEMPREFN TEMPDELETEN ADDOPTN NOTHINGN LOADVMTADDRN 
     GUIDCONSTN RTTIN LOADPARENTFPN OBJCSELECTORN OBJCPROTOCOLN SPECIALIZEN FINALIZETEMPSN
-%token <string> IDENTIFIER STRING HEX NONSEMI
+%token <string> IDENTIFIER STRING HEX
 %token <int>    NUMBER
 %token <float>  FLOAT
 
@@ -18,7 +18,7 @@
     TICK
 %token COMMA EQUALS DOLLAR CARROT SEMICOLON COLON DOT
 %token NIL RESULTDEF POS LOC EXPECTLOC FLAGS CMPLX NILBRACKETS VAR CONST NOTYPESYM
-    LEFT TEMPINIT CASEBLOCK BLOCKID ELSE OUT BRACEOPEN ARRAY OF FORMAL_TYPE
+    LEFT TEMPINIT CASEBLOCK BLOCKID ELSE OUT BRACEOPEN ARRAY OF FORMAL_TYPE BRACEDYNAMIC
 %token EOF
 
 %start main
@@ -29,6 +29,7 @@
 %type <int> cmplx 
 %type <int option> option(cmplx)
 %type <Vp_lifter.Parse_tree.flag list> flags flags_list
+%type <(Vp_lifter.Parse_tree.flag list) option> option(flags)
 %type <(string * Vp_lifter.Parse_tree.pt_vtype) list> data_list data_seq nonempty_list(data)
 %type <Vp_lifter.Parse_tree.pt_vtype> data_val
 %type <(string * Vp_lifter.Parse_tree.pt_vtype) list * Vp_lifter.Parse_tree.parse_tree_node list> node_data_list
@@ -41,9 +42,7 @@
 
 %%
 
-main :
-      EOF  { [] }
-    | node_list { $1 }
+main : node_list { $1 }
 
 node_list : { [] }
     | EOF { [] }
@@ -70,9 +69,10 @@ node :
         POS EQUALS LEFT_PARENTHESIS ln = NUMBER COMMA cn = NUMBER RIGHT_PARENTHESIS COMMA
         LOC EQUALS loc = IDENTIFIER COMMA
         EXPECTLOC EQUALS eloc = IDENTIFIER COMMA
-        FLAGS EQUALS flags = flags 
+        FLAGS EQUALS flags = flags
         cmplx = cmplx?
         opts = optionals?
+        flags?
         ndl = node_data_list
     RIGHT_PARENTHESIS  
     {
@@ -93,7 +93,7 @@ node :
         }
     }
 
-cmplx : CMPLX EQUALS NUMBER { $3 }
+cmplx : COMMA CMPLX EQUALS NUMBER { $4 }
 
 node_data_list : node_list data_list { ($2, $1) } | data_list node_list { ($1, $2) }
 
@@ -198,8 +198,7 @@ resultdef :
     | RESULTDEF EQUALS typestr EQUALS STRING    { if $5 = "<record type>" then $3 ^ $5 else $5 }
     | RESULTDEF EQUALS NILBRACKETS          { "<nil>" }
 
-flags :
-    | LEFT_BRACE flags_list RIGHT_BRACE { $2 }
+flags : LEFT_BRACE flags_list RIGHT_BRACE { $2 }
 
 flags_list : { [] }
     | IDENTIFIER                    { [flag_of_string $1] }
@@ -261,5 +260,6 @@ typestrptr :
       IDENTIFIER    { $1 }
     | CARROT typestr   { "^" ^ $2 }
     | ARRAY OF typestr              { "Array of " ^ $3 }
+    | BRACEDYNAMIC ARRAY OF typestr      { "Array of " ^ $4 }
     | BRACEOPEN ARRAY OF typestr    { "Array of " ^ $4 }
     | FORMAL_TYPE                   { "Formal type" }

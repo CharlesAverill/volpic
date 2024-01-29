@@ -124,6 +124,7 @@ rule token = parse
     | "else"                        { ELSE }
     | "out"                         { OUT }
     | "{Open}"                      { BRACEOPEN }
+    | "{Dynamic}"                   { BRACEDYNAMIC }
     | "Array"                       { ARRAY }
     | "Of"                          { OF }
     | "Formal type"                 { FORMAL_TYPE }

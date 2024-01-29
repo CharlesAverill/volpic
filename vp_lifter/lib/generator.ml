@@ -85,7 +85,7 @@ let type_of_return_type_root r =
       Z
   | Record _ ->
       Record
-  | _ -> 
+  | _ ->
       failwith ("Haven't set coq type for RTR " ^ string_of_return_type_root r)
 
 (* This returns a string containing the Coq type representation of a variable *)
