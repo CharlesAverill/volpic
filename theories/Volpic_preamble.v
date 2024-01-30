@@ -2,9 +2,9 @@ Require Import String.
 Require Import ZArith.
 Require Import Vector.
 Require Import List.
-Import ListNotations.
+Import VectorNotations.
 Open Scope Z.
-Open Scope list_scope.
+Open Scope string_scope.
 
 Declare Scope vp_scope.
 Open Scope vp_scope.
@@ -27,7 +27,7 @@ Definition ids : store -> list id_type := fst.
 Definition in_ids (VOLPIC_store : store) (s : id_type) :=
     (fix f l := match l with 
         | nil => false
-        | h :: t => if string_dec h s then true else f t
+        | cons h t => if string_dec h s then true else f t
         end) (ids VOLPIC_store).
 Definition all_in_ids (VOLPIC_store : store) (l : list id_type) :=
     List.fold_left (
@@ -66,7 +66,7 @@ Definition get_array (VOLPIC_store : store) (s : id_type) :
 Defined.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=
-    (if in_ids VOLPIC_store s then (fst VOLPIC_store) else s :: (fst VOLPIC_store), 
+    (if in_ids VOLPIC_store s then (fst VOLPIC_store) else cons s (fst VOLPIC_store), 
     fun x => if String.eqb x s then v else (snd VOLPIC_store x)).
 
 Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
@@ -99,9 +99,14 @@ Extract Inlined Constant print_endline => "print_endline".
 Axiom print_int : Z -> unit.
 Extract Inlined Constant print_int => "print_int".
 
-(* Axiom fpc_write_text_uint : store -> Z -> Z -> store. *)
 Definition fpc_write_text_uint (s : store) (_ _ : Z) := s.
 Extract Inlined Constant fpc_write_text_uint => "(fun s x _ -> print_int x; s)".
-(* Axiom fpc_writeln_end : store -> store. *)
 Definition fpc_writeln_end (s : store) := s.
 Extract Inlined Constant fpc_writeln_end => "(fun s -> print_endline String.empty; s)".
+
+Definition fpc_dynarray_high (s : store) (v : value) : store :=
+    update s "VP_result" (
+    match v with
+    | VArray _ n _ => VInteger ((Z.of_nat n) - 1)
+    | _ => VInteger 0
+    end).

@@ -27,6 +27,22 @@ type stmt =
   | ForLoop of (id_type * expr * expr * stmt)
   | Break
 
+let string_of_stmt_type = function
+  | Nothing ->
+      "Nothing"
+  | Assignment _ ->
+      "Assignment"
+  | Sequence _ ->
+      ";"
+  | SideEffect _ ->
+      "Side Effect"
+  | IfThenElse _ ->
+      "If"
+  | ForLoop _ ->
+      "For"
+  | Break ->
+      "Break"
+
 type gallina =
   | Root of parse_tree_node * gallina
   | Sequence of gallina list
@@ -135,7 +151,9 @@ let rec stmt_of_parse_tree parse_tree =
           ( id_of_parse_tree (List.hd parse_tree.children)
           , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Block ->
-      Sequence (List.map stmt_of_parse_tree parse_tree.children)
+      if List.length parse_tree.children = 1 then
+        stmt_of_parse_tree (List.hd parse_tree.children)
+      else Sequence (List.map stmt_of_parse_tree parse_tree.children)
   | Statement ->
       stmt_of_parse_tree (List.hd parse_tree.children)
   | Nothing | Tempcreate | Tempdelete ->

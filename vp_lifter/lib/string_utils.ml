@@ -1,3 +1,7 @@
+open String
+
+type string = t
+
 let definition_str = "Definition"
 
 let id_prefix = "VP_"
@@ -28,24 +32,40 @@ let sf_get = "sf_get"
 
 let comment s = "(*" ^ s ^ "*)"
 
+let enforce_endswith_store s =
+  if ends_with s ~suffix:store_name then s
+  else if ends_with s ~suffix:" in" then s ^ " " ^ store_name
+  else if ends_with s ~suffix:" in)" then
+    sub s 0 (length s - 4) ^ " " ^ store_name ^ ")"
+  else s
+(* failwith
+   ( "Couldn't enforce endswith_store for string:\n==========" ^ s
+   ^ "\n==========" ) *)
+
+let tabs n = make n '\t'
+
+let has_parens s = starts_with ~prefix:"(" s && ends_with ~suffix:")" s
+
+let parens ?(parens_req_spaces = true) s =
+  if has_parens s || ((not (contains s ' ')) && parens_req_spaces) then s
+  else "(" ^ trim s ^ ")"
+
 let stringify s = "\"" ^ id_prefix ^ s ^ "\""
 
-let pairify l = "(" ^ String.concat "," l ^ ")"
+let pairify l = parens ~parens_req_spaces:false (concat "," l)
 
 let pair a b = pairify [a; b]
-
-let letin id expr = String.concat " " ["let"; id; ":="; expr; "in"]
-
-let letins ids exprs = letin (pairify ids) (pairify exprs)
-
-let has_parens s =
-  String.starts_with ~prefix:"(" s && String.ends_with ~suffix:")" s
-
-let parens s = if has_parens s then s else "(" ^ s ^ ")"
 
 let square_braces s = "[" ^ s ^ "]"
 
 let remove_empties = List.filter (fun s -> s <> "")
+
+let econcat sep l = concat sep (remove_empties l)
+
+let letin depth id expr = tabs depth ^ econcat " " ["let"; id; ":="; expr; "in"]
+
+let letins depth ids exprs =
+  letin depth (pairify ids) ("\n" ^ tabs (depth + 1) ^ pairify exprs)
 
 let contains s1 s2 =
   let re = Str.regexp_string s2 in
@@ -67,35 +87,41 @@ let string_after_substr str sub =
   try
     Str.string_after str
       ( try
-          Str.search_backward (Str.regexp_string sub) str (String.length str - 1)
-          + String.length sub
+          Str.search_backward (Str.regexp_string sub) str (length str - 1)
+          + length sub
         with Not_found ->
           failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
   with Not_found ->
     failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
-let matchwith expr cases =
-  String.concat " "
-    ( ["match"; parens expr; "with"]
-    @ List.map (fun (constr, branch) -> "| " ^ constr ^ " => " ^ branch) cases
-    @ ["end"] )
+let matchwith ?(noindent_first = false) depth expr cases =
+  econcat " "
+    ( [ (if noindent_first then "" else tabs depth)
+      ; "match"
+      ; (if contains expr "\n" then "\n" else "") ^ parens expr
+      ; "with"
+      ; "\n"
+      ; tabs (depth + 1) ]
+    @ List.map
+        (fun (constr, branch) ->
+          "| " ^ trim constr ^ " => " ^ trim branch ^ "\n" ^ tabs (depth + 1) )
+        cases
+    @ [tabs depth; "end"] )
 
-let ifthenelse condition pos neg =
-  String.concat " "
-    (remove_empties
-       [ "if"
-       ; parens condition
-       ; "then"
-       ; parens pos
-       ; (if neg <> "" then "else" else "")
-       ; (if neg <> "" then parens neg else "") ] )
-
-let matchify e l =
-  String.concat " "
-    [ "match"
-    ; e
-    ; "with"
-    ; String.concat "| "
-        (List.map
-           (fun (case, expr) -> String.concat " " [case; "=>"; parens expr])
-           l ) ]
+let ifthenelse ?(noindent_first = false) ?(one_line = false) depth condition pos
+    neg =
+  if neg = "" then failwith "If expressions must be total"
+  else
+    let depth = if one_line then 0 else depth in
+    let newline = if one_line then "" else "\n" in
+    let itabs = if one_line then "" else tabs (depth + 1) in
+    econcat " "
+      (remove_empties
+         [ (if noindent_first then "" else tabs depth)
+         ; "if"
+         ; parens condition
+         ; "then" ^ newline
+         ; itabs
+         ; parens (trim pos)
+         ; newline ^ tabs depth ^ "else" ^ newline
+         ; itabs ^ parens (trim neg) ] )
