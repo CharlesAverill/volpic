@@ -54,9 +54,9 @@ let extraction fn lang path =
   in
   String.concat "" ["Extraction \""; path; "\" main."]
 
-type coq_type = Error | Z | String | Unit | Record | Bool
+type coq_type = Error | Z | String | Unit | Record | Bool | Vector of coq_type
 
-let string_of_coq_type = function
+let rec string_of_coq_type = function
   | Z ->
       "Z"
   | String ->
@@ -67,6 +67,8 @@ let string_of_coq_type = function
       "record"
   | Bool ->
       "bool"
+  | Vector s ->
+      "vector" ^ " " ^ string_of_coq_type s
   | Error ->
       failwith "Tried to get string of error coq type"
 
@@ -79,12 +81,14 @@ let gamma = ref fresh_gamma
 let update_typctx id value =
   gamma := fun x -> if x = id then value else !gamma id
 
-let type_of_return_type_root r =
+let rec type_of_return_type_root r =
   match r with
-  | Dword | LongWord | StrNumber ->
+  | Dword | LongWord | StrNumber | Int64 | SmallInt ->
       Z
   | Record _ ->
       Record
+  | Array (_, _, r) ->
+      Vector (type_of_return_type_root r)
   | _ ->
       failwith ("Haven't set coq type for RTR " ^ string_of_return_type_root r)
 
@@ -94,7 +98,7 @@ let type_of_expr = function
       !gamma id
   | Integer _ | Add _ | Sub _ ->
       Z
-  | Gt _ | Lt _ ->
+  | Gt _ | Lt _ | Eq _ ->
       Bool
   | String _ ->
       String
@@ -102,6 +106,8 @@ let type_of_expr = function
       Unit
   | FuncCall (_, typ, _) ->
       type_of_return_type_root typ
+  | Subscript (rtr, _, _) ->
+      type_of_return_type_root (rtr_of_rt rtr)
   | Nothing ->
       Unit
 
@@ -121,6 +127,8 @@ let rec string_of_expr x shallow bound_vars =
         [ (if shallow then "" else coq_expr_type_getter (Identifier id))
         ; store_name
         ; "\"" ^ id_prefix ^ id ^ "\"" ]
+  | Subscript (_, arr, idx) ->
+      String.concat " " [string_of_expr arr shallow bound_vars]
   | Integer n ->
       string_of_int n
   | String s ->
@@ -133,6 +141,8 @@ let rec string_of_expr x shallow bound_vars =
       binop ">?" e1 e2
   | Lt (e1, e2) ->
       binop "<?" e1 e2
+  | Eq (e1, e2) ->
+      binop "=?" e1 e2
   | ProcCall (id, e) ->
       String.concat " "
         ( sanitize_id id
@@ -173,6 +183,8 @@ and coq_type_getter = function
       "get_bool"
   | String ->
       "get_string"
+  | Vector s ->
+      "get_vec" ^ " " ^ string_of_coq_type s
   | Record ->
       ""
   | Unit ->
@@ -182,36 +194,40 @@ and coq_type_getter = function
 
 and coq_expr_type_getter e = coq_type_getter (type_of_expr e)
 
+let store_string_of_return_type rtr =
+  match rtr with
+  | Dword ->
+      int_expr_constr
+  | Record s ->
+      comment ("record" ^ s)
+  | _ ->
+      failwith
+        ( "RTR "
+        ^ string_of_return_type_root rtr
+        ^ " not yet supported in store_string_of_expr" )
+
+let store_constr = function
+  | Identifier id ->
+      id_expr_constr
+  | Integer _ | Add _ | Sub _ ->
+      int_expr_constr
+  | Gt _ | Lt _ | Eq _ ->
+      bool_expr_constr
+  | String _ ->
+      str_expr_constr
+  | ProcCall _ ->
+      unit_expr_constr
+  | FuncCall (_, rt, _) ->
+      store_string_of_return_type rt
+  | Subscript (rt, _, _) ->
+      store_string_of_return_type (rtr_of_rt rt)
+  | Nothing ->
+      failwith "Shouldn't be trying to store a Nothing"
+
 let store_string_of_expr e bound_vars =
   "("
   ^ String.concat " "
-      [ ( match e with
-        | Identifier id ->
-            id_expr_constr
-        | Integer _ | Add _ | Sub _ ->
-            int_expr_constr
-        | Gt _ | Lt _ ->
-            bool_expr_constr
-        | String _ ->
-            str_expr_constr
-        | ProcCall _ ->
-            unit_expr_constr
-        | FuncCall (_, rt, _) -> (
-          match rt with
-          | Dword ->
-              int_expr_constr
-          | Record s ->
-              comment ("record" ^ s)
-          | _ ->
-              failwith
-                ( "RTR "
-                ^ string_of_return_type_root rt
-                ^ " not yet supported in store_string_of_expr" ) )
-        | Nothing ->
-            failwith "Shouldn't be trying to store a Nothing" )
-      ; "("
-      ; string_of_expr e false bound_vars
-      ; ")" ]
+      [store_constr e; "("; string_of_expr e false bound_vars; ")"]
   ^ ")"
 
 let rec string_of_stmt (extract : bool) bound_vars s =
@@ -219,6 +235,8 @@ let rec string_of_stmt (extract : bool) bound_vars s =
   let f : stmt -> string = function
     | Nothing ->
         (* comment "nothingn statement" *) ""
+    | Break ->
+        letin broken "true"
     | Assignment (id, expr) -> (
       match type_of_expr expr with
       | Record ->
@@ -246,13 +264,12 @@ let rec string_of_stmt (extract : bool) bound_vars s =
         (* Currently, if X is loop iter, lifter will generate (get_int store "VP_X" which is wrong) *)
         update_typctx id Z ;
         let bound_vars = id :: bound_vars in
+        print_endline (string_of_expr el false bound_vars) ;
+        print_endline (string_of_expr eh false bound_vars) ;
         String.concat " "
-          [ letin "bounds_op"
-              ( match (el, eh) with
-              | Integer eli, Integer ehi ->
-                  if eli < ehi then "Z.leb" else "Z.geb"
-              | _ ->
-                  failwith "Non-integer loop bounds not yet supported" )
+          [ letin "going_up" (string_of_expr (Lt (el, eh)) true bound_vars)
+          ; letin "bounds_op" (parens (ifthenelse "going_up" "Z.leb" "Z.geb"))
+          ; letin "iter_op" (parens (ifthenelse "going_up" "Z.add 1" "Z.sub 1"))
           ; letin store_name
               (String.concat " "
                  [ "update"
@@ -263,7 +280,8 @@ let rec string_of_stmt (extract : bool) bound_vars s =
               (String.concat " "
                  [ "fix"
                  ; "loop"
-                 ; parens (vp_depth ^ " : nat") (* ; parens (id ^ " : Z") *)
+                 ; parens (vp_depth ^ " : nat")
+                 ; parens (broken ^ " : bool")
                  ; parens (store_name ^ " : store")
                  ; ":="
                  ; matchwith vp_depth
@@ -284,23 +302,22 @@ let rec string_of_stmt (extract : bool) bound_vars s =
                                      [ "update"
                                      ; store_name
                                      ; stringify id
-                                     ; (let op : expr * expr -> expr =
-                                          match (el, eh) with
-                                          | Integer eli, Integer ehi ->
-                                              fun (e1, e2) ->
-                                                if eli < ehi then Add (e1, e2)
-                                                else Sub (e1, e2)
-                                          | _ ->
-                                              failwith
-                                                "Non-integer loop bounds not \
-                                                 yet supported"
-                                        in
-                                        parens
-                                          (store_string_of_expr
-                                             (op (Identifier id, Integer 1))
-                                             bound_vars ) ) ] )
+                                     ; parens
+                                         (String.concat " "
+                                            [ int_expr_constr
+                                            ; parens
+                                                (String.concat " "
+                                                   [ "iter_op"
+                                                   ; parens
+                                                       (String.concat " "
+                                                          [ coq_expr_type_getter
+                                                              (Integer 0)
+                                                          ; store_name
+                                                          ; stringify id ] ) ] )
+                                            ] ) ] )
                               ; "loop"
                               ; "n'" (* ; parens (id ^ " + 1") *)
+                              ; broken
                               ; store_name ] )
                            ("Some " ^ store_name) ) ] ] )
           ; "1000%nat"
@@ -327,7 +344,12 @@ let rec all_ids_in_expr : expr -> string list = function
       []
   | Identifier id ->
       [id]
-  | Add (e1, e2) | Sub (e1, e2) | Gt (e1, e2) | Lt (e1, e2) ->
+  | Add (e1, e2)
+  | Sub (e1, e2)
+  | Gt (e1, e2)
+  | Lt (e1, e2)
+  | Eq (e1, e2)
+  | Subscript (_, e1, e2) ->
       all_ids_in_expr e1 @ all_ids_in_expr e2
   | ProcCall (_, e) | FuncCall (_, _, e) ->
       List.concat (List.map all_ids_in_expr e)
@@ -336,7 +358,7 @@ let rec all_ids_in_expr : expr -> string list = function
    Return all identifiers in a statement
 *)
 let rec all_ids_in_stmt : stmt -> string list = function
-  | Nothing ->
+  | Nothing | Break ->
       []
   | Assignment (_, expr) ->
       all_ids_in_expr expr

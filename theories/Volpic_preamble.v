@@ -1,5 +1,6 @@
 Require Import String.
 Require Import ZArith.
+Require Import Vector.
 Require Import List.
 Import ListNotations.
 Open Scope Z.
@@ -9,11 +10,14 @@ Declare Scope vp_scope.
 Open Scope vp_scope.
 Definition id_type := string.
 
+Definition vector := t.
+
 Inductive value : Type :=
 | VNull
 | VInteger   (n : Z)
 | VBool      (b : bool)
-| VString    (s : string).
+| VString    (s : string)
+| VArray     (T : Type) (n : nat) (v : vector T n).
 
 Definition store : Type := (list id_type * (id_type -> value)).
 
@@ -50,6 +54,16 @@ Definition get_bool (VOLPIC_store : store) (s : id_type) :=
     | VBool b => b
     | _ => false
     end.
+
+Definition get_array (VOLPIC_store : store) (s : id_type) :
+    (match sf_get VOLPIC_store s with 
+     | VArray T n _ => vector T n
+     | _ => vector unit 0
+     end).
+     intros. destruct (sf_get VOLPIC_store s).
+     all: try exact (Vector.nil unit).
+     exact v.
+Defined.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else s :: (fst VOLPIC_store), 

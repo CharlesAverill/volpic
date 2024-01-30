@@ -11,9 +11,11 @@ type expr =
   | Sub of expr * expr
   | Gt of expr * expr
   | Lt of expr * expr
+  | Eq of expr * expr
   | ProcCall of (id_type * expr list)
   (* identifier, return type, args *)
   | FuncCall of (id_type * return_type_root * expr list)
+  | Subscript of return_type * expr * expr
 
 type stmt =
   | Nothing
@@ -23,6 +25,7 @@ type stmt =
   | IfThenElse of (expr * stmt * stmt)
   (* Iterator, min, max, body *)
   | ForLoop of (id_type * expr * expr * stmt)
+  | Break
 
 type gallina =
   | Root of parse_tree_node * gallina
@@ -70,8 +73,21 @@ let rec expr_of_parse_tree parse_tree =
       Lt
         ( expr_of_parse_tree (List.hd parse_tree.children)
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Equal ->
+      Eq
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Typeconv ->
       expr_of_parse_tree (List.hd parse_tree.children)
+  | Vec ->
+      let children = List.map expr_of_parse_tree parse_tree.children in
+      if List.length children = 2 then
+        match (List.nth children 0, List.nth children 1) with
+        | Identifier arr_name, Identifier idx ->
+            Subscript (parse_tree.resultdef, Identifier arr_name, Identifier idx)
+        | _ ->
+            failwith "Unrecognized vecn form"
+      else failwith "Unrecognized vecn form"
   | Call -> (
       let procdata = find_data parse_tree.data "proc" in
       let proc = string_of_vtype procdata in
@@ -146,6 +162,8 @@ let rec stmt_of_parse_tree parse_tree =
         , expr_of_parse_tree (List.nth parse_tree.children 1)
         , expr_of_parse_tree (List.nth parse_tree.children 2)
         , stmt_of_parse_tree (List.nth parse_tree.children 3) )
+  | Break ->
+      Break
   | Call ->
       SideEffect
         (let proc = find_data parse_tree.data "proc" in

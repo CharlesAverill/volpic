@@ -739,4 +739,3 @@ let main vP_store =
                  in
                  (fun s -> print_endline String.empty; s) vP_store0
             else vP_store
-let _ = main ([], fun _ -> VNull)

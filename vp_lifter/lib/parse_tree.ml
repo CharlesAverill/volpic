@@ -292,6 +292,8 @@ and return_type =
   | Const of return_type_root
   | Var of return_type_root
 
+let rtr_of_rt = function RT rtr | Const rtr | Var rtr -> rtr
+
 let rec string_of_return_type_root = function
   | Nil ->
       "nil"
@@ -358,6 +360,7 @@ let rec string_of_return_type_root = function
       ^ "Array" ^ string_of_range r ^ " Of "
       ^ string_of_return_type (RT rt)
   | Procedure (id, args) ->
+      print_endline (id ^ " is a procedure") ;
       id
       ^
       if List.length args <> 0 then
@@ -377,6 +380,8 @@ and string_of_return_type : return_type -> string = function
       "Var " ^ string_of_return_type_root rt
 
 let rec return_type_root_of_string s =
+  print_endline "WHAT" ;
+  print_endline s ;
   if String.length s = 0 then failwith "Can't parse return type of empty string" ;
   let bp = String.starts_with ~prefix:"BitPacked" s in
   if String.get s 0 = '^' then
@@ -393,15 +398,19 @@ let rec return_type_root_of_string s =
     if contains s ":" then
       Function
         ( string_before_substr s "("
-        , [ return_type_of_string
-              (string_after_substr (string_before_substr s ")") "(") ]
-        , return_type_of_string (string_after_substr s ":") )
+        , List.map return_type_of_string
+            (remove_empties
+               (String.split_on_char ';'
+                  (string_after_substr (string_before_substr s ")") "(") ) )
+        , return_type_of_string
+            (string_before_substr (string_after_substr s ":") ";") )
     else
       Procedure
         ( string_before_substr s "("
         , List.map return_type_of_string
             (remove_empties
-               [string_after_substr (string_before_substr s ")") "("] ) )
+               (String.split_on_char ';'
+                  (string_after_substr (string_before_substr s ")") "(") ) ) )
   else if contains s ";" then Procedure (string_before_substr s ";", [])
   else if contains s "<record type>" then
     Record (string_before_substr s "<record type>")
@@ -465,6 +474,8 @@ let rec return_type_root_of_string s =
         Windownumber
     | "commandcode" ->
         Commandcode
+    | "int_arr" ->
+        Array (false, Unbounded, Int64)
     | _ ->
         Record (String.trim (String.lowercase_ascii s))
 (* failwith ("Unknown return type " ^ s) *)

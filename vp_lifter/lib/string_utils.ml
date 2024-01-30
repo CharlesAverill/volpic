@@ -22,6 +22,8 @@ let unit_expr_constr = "VUnit"
 
 let poison = id_prefix ^ "poison"
 
+let broken = id_prefix ^ "broken"
+
 let sf_get = "sf_get"
 
 let comment s = "(*" ^ s ^ "*)"
@@ -87,3 +89,13 @@ let ifthenelse condition pos neg =
        ; parens pos
        ; (if neg <> "" then "else" else "")
        ; (if neg <> "" then parens neg else "") ] )
+
+let matchify e l =
+  String.concat " "
+    [ "match"
+    ; e
+    ; "with"
+    ; String.concat "| "
+        (List.map
+           (fun (case, expr) -> String.concat " " [case; "=>"; parens expr])
+           l ) ]
