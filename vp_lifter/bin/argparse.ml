@@ -1,3 +1,5 @@
+open Vp_lifter.Logging
+
 let extract_lang_of_string s =
   match String.lowercase_ascii s with
   | "ocaml" | "ml" ->
@@ -31,7 +33,10 @@ let parse_arguments () =
   let use_preproc = ref false in
   let speclist =
     Arg.
-      [ ( "-fpc-args"
+      [ ( "-logging"
+        , Arg.Int (fun i -> _GLOBAL_LOG_LEVEL := log_of_int i)
+        , "Lowest level of logs to print, range is " ^ range_of_logs )
+      ; ( "-fpc-args"
         , Arg.String (fun s -> fpc_flags := String.concat " " [!fpc_flags; s])
         , "Args passed to FPC during compilation" )
       ; ( "-use-tree"

@@ -1,4 +1,5 @@
 open String_utils
+open Logging
 
 type parse_tree_node_type =
   | Emptynode
@@ -244,7 +245,7 @@ let string_of_range = function
       "[" ^ string_of_int a ^ ".." ^ string_of_int b ^ "]"
 
 let range_of_string s =
-  if s = "" then Unbounded
+  if s = "" || not (contains s "[") then Unbounded
   else
     let s' = string_after_substr (string_before_substr s "]") "[" in
     let dd_pos = Str.search_forward (Str.regexp_string "..") s' 0 in
@@ -360,7 +361,6 @@ let rec string_of_return_type_root = function
       ^ "Array" ^ string_of_range r ^ " Of "
       ^ string_of_return_type (RT rt)
   | Procedure (id, args) ->
-      print_endline (id ^ " is a procedure") ;
       id
       ^
       if List.length args <> 0 then
@@ -380,104 +380,112 @@ and string_of_return_type : return_type -> string = function
       "Var " ^ string_of_return_type_root rt
 
 let rec return_type_root_of_string s =
-  print_endline "WHAT" ;
-  print_endline s ;
-  if String.length s = 0 then failwith "Can't parse return type of empty string" ;
-  let bp = String.starts_with ~prefix:"BitPacked" s in
-  if String.get s 0 = '^' then
-    Pointer (return_type_root_of_string (String.sub s 1 (String.length s - 1)))
-  else if bp || String.starts_with ~prefix:"Array" s then
-    Array
-      ( bp
-      , range_of_string s
-      , return_type_root_of_string
-          (Str.string_after s
-             (Str.search_backward (Str.regexp_string " ") s
-                (String.length s - 1) ) ) )
-  else if contains s "(" then
-    if contains s ":" then
-      Function
-        ( string_before_substr s "("
-        , List.map return_type_of_string
-            (remove_empties
-               (String.split_on_char ';'
-                  (string_after_substr (string_before_substr s ")") "(") ) )
-        , return_type_of_string
-            (string_before_substr (string_after_substr s ":") ";") )
+  let s = String.lowercase_ascii s in
+  let x =
+    if String.length s = 0 then
+      failwith "Can't parse return type of empty string" ;
+    let bp = String.starts_with ~prefix:"bitpacked" s in
+    if String.get s 0 = '^' then
+      Pointer
+        (return_type_root_of_string (String.sub s 1 (String.length s - 1)))
+    else if contains s "(" then
+      if contains s ":" then
+        Function
+          ( string_before_substr s "("
+          , List.map return_type_of_string
+              (remove_empties
+                 (String.split_on_char ';'
+                    (string_after_substr (string_before_substr s ")") "(") ) )
+          , return_type_of_string
+              (string_before_substr ~ignore_fail:true
+                 (string_after_substr s ":")
+                 ";" ) )
+      else
+        Procedure
+          ( string_before_substr s "("
+          , List.map return_type_of_string
+              (remove_empties
+                 (String.split_on_char ';'
+                    (string_after_substr (string_before_substr s ")") "(") ) )
+          )
+    else if contains s ";" then Procedure (string_before_substr s ";", [])
+    else if contains s " array of " then
+      Array
+        ( bp
+        , range_of_string s
+        , return_type_root_of_string
+            (string_before_substr ~ignore_fail:true
+               (string_after_substr s " array of ")
+               " = " ) )
+    else if contains s "<record type>" then
+      Record (string_before_substr s "<record type>")
     else
-      Procedure
-        ( string_before_substr s "("
-        , List.map return_type_of_string
-            (remove_empties
-               (String.split_on_char ';'
-                  (string_after_substr (string_before_substr s ")") "(") ) ) )
-  else if contains s ";" then Procedure (string_before_substr s ";", [])
-  else if contains s "<record type>" then
-    Record (string_before_substr s "<record type>")
-  else
-    match String.trim (String.lowercase_ascii s) with
-    | "$main; register;" ->
-        Procedure ("main", [])
-    | "<nil>" ->
-        Nil
-    | "untyped" ->
-        Untyped
-    | "dword" ->
-        Dword
-    | "qword" ->
-        Qword
-    | "text" ->
-        Text
-    | "longint" ->
-        LongInt
-    | "shortstring" ->
-        ShortString
-    | "shortint" ->
-        ShortInt
-    | "char" ->
-        Char
-    | "int64" ->
-        Int64
-    | "asciicode" ->
-        ASCIIcode
-    | "byte" ->
-        Byte
-    | "boolean" ->
-        Boolean
-    | "smallint" ->
-        SmallInt
-    | "twohalves" ->
-        Twohalves
-    | "word" ->
-        Word
-    | "smallnumber" ->
-        SmallNumber
-    | "strnumber" ->
-        StrNumber
-    | "string" ->
-        String
-    | "memoryword" ->
-        MemoryWord
-    | "quarterword" ->
-        QuarterWord
-    | "halfword" ->
-        HalfWord
-    | "longword" ->
-        LongWord
-    | "eightbits" ->
-        Eightbits
-    | "bytefile" ->
-        Bytefile
-    | "wordfile" ->
-        Wordfile
-    | "windownumber" ->
-        Windownumber
-    | "commandcode" ->
-        Commandcode
-    | "int_arr" ->
-        Array (false, Unbounded, Int64)
-    | _ ->
-        Record (String.trim (String.lowercase_ascii s))
+      match String.trim (String.lowercase_ascii s) with
+      | "$main; register;" ->
+          Procedure ("main", [])
+      | "<nil>" ->
+          Nil
+      | "untyped" ->
+          Untyped
+      | "dword" ->
+          Dword
+      | "qword" ->
+          Qword
+      | "text" ->
+          Text
+      | "longint" ->
+          LongInt
+      | "shortstring" ->
+          ShortString
+      | "shortint" ->
+          ShortInt
+      | "char" ->
+          Char
+      | "int64" ->
+          Int64
+      | "asciicode" ->
+          ASCIIcode
+      | "byte" ->
+          Byte
+      | "boolean" ->
+          Boolean
+      | "smallint" ->
+          SmallInt
+      | "twohalves" ->
+          Twohalves
+      | "word" ->
+          Word
+      | "smallnumber" ->
+          SmallNumber
+      | "strnumber" ->
+          StrNumber
+      | "string" ->
+          String
+      | "memoryword" ->
+          MemoryWord
+      | "quarterword" ->
+          QuarterWord
+      | "halfword" ->
+          HalfWord
+      | "longword" ->
+          LongWord
+      | "eightbits" ->
+          Eightbits
+      | "bytefile" ->
+          Bytefile
+      | "wordfile" ->
+          Wordfile
+      | "windownumber" ->
+          Windownumber
+      | "commandcode" ->
+          Commandcode
+      | "int_arr" ->
+          Array (false, Unbounded, Int64)
+      | _ ->
+          Record (String.trim (String.lowercase_ascii s))
+  in
+  (* _log Log_Debug (s ^ ": " ^ string_of_return_type_root x) ; *)
+  x
 (* failwith ("Unknown return type " ^ s) *)
 
 and return_type_of_string s =
@@ -757,9 +765,9 @@ let string_of_optional = function
   | OList l ->
       "[" ^ String.concat "," l ^ "]"
 
-let find_data (data : (string * pt_vtype) list) key =
+let find_data data key =
   try snd (List.find (fun s -> fst s = key) data)
-  with Not_found -> failwith ("Couldn't find key " ^ key ^ " in data list")
+  with Not_found -> failwith ("Couldn't find key \"" ^ key ^ "\" in data list")
 
 type parse_tree_node =
   { is_func: bool

@@ -1,6 +1,7 @@
 open Converter
 open String_utils
 open Parse_tree
+open Logging
 
 let preamble extract extract_lang =
   let coq_extraction_dep s =
@@ -53,64 +54,32 @@ let extraction fn func lang path =
   in
   econcat " " ["Extraction"; "\"" ^ path ^ "\""; func ^ "."]
 
-type coq_type = Error | Z | String | Unit | Record | Bool | Vector of coq_type
-
-let rec string_of_coq_type = function
-  | Z ->
-      "Z"
-  | String ->
-      "string"
-  | Unit ->
-      "unit"
-  | Record ->
-      "record"
-  | Bool ->
-      "bool"
-  | Vector s ->
-      "vector" ^ " " ^ string_of_coq_type s
-  | Error ->
-      failwith "Tried to get string of error coq type"
-
-type typ_ctx = id_type -> coq_type
-
-let fresh_gamma _ = Error
-
-let gamma = ref fresh_gamma
-
-let update_typctx id value =
-  gamma := fun x -> if x = id then value else !gamma id
-
-let rec type_of_return_type_root r =
-  match r with
-  | Dword | LongWord | StrNumber | Int64 | SmallInt ->
-      Z
-  | Record _ ->
-      Record
-  | Array (_, _, r) ->
-      Vector (type_of_return_type_root r)
-  | _ ->
-      failwith ("Haven't set coq type for RTR " ^ string_of_return_type_root r)
+let typctx = ref fresh_gamma
 
 (* This returns a string containing the Coq type representation of a variable *)
 let type_of_expr = function
   | Identifier id ->
-      !gamma id
-  | Integer _ | Add _ | Sub _ ->
+      _log Log_Debug
+        ("Getting type of " ^ id ^ ": " ^ string_of_coq_type (!typctx id)) ;
+      !typctx id
+  | Integer _ | Add _ | Sub _ | Div _ ->
       Z
-  | Gt _ | Lt _ | Eq _ ->
+  | Gt _ | Lt _ | Geq _ | Leq _ | Eq _ | Uneq _ ->
       Bool
   | String _ ->
       String
   | ProcCall _ ->
       Unit
   | FuncCall (_, typ, _) ->
-      type_of_return_type_root typ
+      coq_type_of_return_type_root typ
   | Subscript (rtr, _, _) ->
-      type_of_return_type_root (rtr_of_rt rtr)
+      coq_type_of_return_type_root (rtr_of_rt rtr)
   | Nothing ->
       Unit
 
 let lcontains l i = List.exists (fun x -> x = i) l
+
+let default_coq_value = function Z -> "0" | _ -> "5"
 
 let rec string_of_expr x shallow bound_vars =
   let binop op e1 e2 =
@@ -126,8 +95,12 @@ let rec string_of_expr x shallow bound_vars =
         [ (if shallow then "" else coq_expr_type_getter (Identifier id))
         ; store_name
         ; "\"" ^ id_prefix ^ id ^ "\"" ]
-  | Subscript (_, arr, idx) ->
-      econcat " " [string_of_expr arr shallow bound_vars]
+  | Subscript (rt, arr, idx) ->
+      econcat " "
+        [ "subscript"
+        ; parens (string_of_expr arr shallow bound_vars)
+        ; parens (string_of_expr idx shallow bound_vars)
+        ; default_coq_value (coq_type_of_return_type_root (rtr_of_rt rt)) ]
   | Integer n ->
       string_of_int n
   | String s ->
@@ -136,12 +109,20 @@ let rec string_of_expr x shallow bound_vars =
       binop "+" e1 e2
   | Sub (e1, e2) ->
       binop "-" e1 e2
+  | Div (e1, e2) ->
+      binop "/" e1 e2
   | Gt (e1, e2) ->
       binop ">?" e1 e2
   | Lt (e1, e2) ->
       binop "<?" e1 e2
+  | Geq (e1, e2) ->
+      binop ">=?" e1 e2
+  | Leq (e1, e2) ->
+      binop "<=?" e1 e2
   | Eq (e1, e2) ->
       binop "=?" e1 e2
+  | Uneq (e1, e2) ->
+      binop "!=?" e1 e2
   | ProcCall (id, e) ->
       econcat " "
         ( sanitize_id id :: store_name
@@ -150,20 +131,20 @@ let rec string_of_expr x shallow bound_vars =
                let se = string_of_expr s shallow bound_vars in
                if contains se " " then parens se else se )
              e )
-  | FuncCall (id, rt, e) ->
+  | FuncCall (func_name, rt, e) ->
       econcat " "
-        [ coq_type_getter (type_of_return_type_root rt)
-        ; parens
-            ( (match rt with Record _ -> "" | _ -> sf_get ^ " ")
-            ^ parens
-                (econcat " "
-                   ( sanitize_id id :: store_name
-                   :: List.map
-                        (fun s ->
-                          let se = string_of_expr s shallow bound_vars in
-                          if contains se " " then parens se else se )
-                        e ) )
-            ^ match rt with Record _ -> "" | _ -> " " ^ stringify "result" )
+        [ coq_type_getter (coq_type_of_return_type_root rt)
+        ; ( (* (match rt with Record _ -> "" | _ -> sf_get ^ " ")
+               ^ *)
+            parens
+              (econcat " "
+                 ( sanitize_id func_name :: store_name
+                 :: List.map
+                      (fun s ->
+                        let se = string_of_expr s shallow bound_vars in
+                        if contains se " " then parens se else se )
+                      e ) )
+          ^ match rt with Record _ -> "" | _ -> " " ^ stringify "result" )
         ; (match rt with Record _ -> stringify "result" | _ -> "") ]
   | Nothing ->
       ""
@@ -176,7 +157,7 @@ and coq_type_getter = function
   | String ->
       "get_string"
   | Vector s ->
-      "get_vec" ^ " " ^ string_of_coq_type s
+      "get_array"
   | Record ->
       ""
   | Unit ->
@@ -188,7 +169,7 @@ and coq_expr_type_getter e = coq_type_getter (type_of_expr e)
 
 let store_string_of_return_type rtr =
   match rtr with
-  | Dword ->
+  | Dword | Int64 | LongInt | SmallInt ->
       int_expr_constr
   | Record s ->
       comment ("record" ^ s)
@@ -210,17 +191,17 @@ let constr_of_coq_type = function
   | Bool ->
       bool_expr_constr
   | Vector _ ->
-      failwith "Can't store vectors yet"
+      "constr_varray" (* failwith "Can't store vectors yet" *)
   | Error ->
       failwith "Shouldn't be trying to store an error"
 
 let store_constr expr =
   match expr with
   | Identifier id ->
-      constr_of_coq_type (!gamma id)
-  | Integer _ | Add _ | Sub _ ->
+      constr_of_coq_type (!typctx id)
+  | Integer _ | Add _ | Sub _ | Div _ ->
       int_expr_constr
-  | Gt _ | Lt _ | Eq _ ->
+  | Gt _ | Lt _ | Geq _ | Leq _ | Eq _ | Uneq _ ->
       bool_expr_constr
   | String _ ->
       str_expr_constr
@@ -288,7 +269,7 @@ and string_of_stmt (extract : bool) ~mid_seq bound_vars depth s =
             ; stringify id
             ; string_of_expr expr false bound_vars ]
       | _ ->
-          update_typctx id (type_of_expr expr) ;
+          (* update_typctx id (type_of_expr expr) ; *)
           let s =
             econcat " "
               [ "update"
@@ -308,15 +289,22 @@ and string_of_stmt (extract : bool) ~mid_seq bound_vars depth s =
                    bound_vars depth x )
                l
              (* @ [store_name] *) )
+    | WhileLoop (cond, lb) ->
+        econcat "\n"
+          [ loop
+              (* Condition *) (string_of_expr cond false bound_vars)
+              (* Loop Body *)
+              (string_of_stmt extract ~mid_seq:true bound_vars (depth + 1) lb)
+              (* Post-loop body *) "" (depth + 1) ]
     | ForLoop (id, el, eh, lb) ->
         (* Check for bound variables *)
         (* Currently, if X is loop iter, lifter will generate (get_int store "VP_X" which is wrong) *)
-        update_typctx id Z ;
+        (* update_typctx id Z ; *)
         let bound_vars = id :: bound_vars in
         econcat "\n"
           [ (* Whether the loop is iterating upwards or downwards (downto) *)
             letin depth "going_up"
-              (string_of_expr (Lt (el, eh)) true bound_vars)
+              (string_of_expr (Lt (el, eh)) false bound_vars)
             (* Which function to use to check if the loop bounds have been exceeded *)
           ; letin depth "bounds_op"
               (parens
@@ -339,15 +327,9 @@ and string_of_stmt (extract : bool) ~mid_seq bound_vars depth s =
                  ; parens
                      ( coq_expr_type_getter (Identifier id)
                      ^ " " ^ store_name ^ " " ^ stringify id )
-                 ; string_of_expr eh false bound_vars ] )
-              ( (* Loop body *)
-                ( match lb with
-                | IfThenElse _ ->
-                    print_endline "ifthenelse!"
-                | _ ->
-                    () ) ;
-                string_of_stmt extract ~mid_seq:true bound_vars (depth + 1) lb
-              )
+                 ; parens (string_of_expr eh false bound_vars) ] )
+              ((* Loop body *)
+               string_of_stmt extract ~mid_seq:true bound_vars (depth + 1) lb )
               (* Post-loop-body increment/decrement *)
               (letin depth store_name
                  (econcat " "
@@ -374,12 +356,17 @@ and string_of_stmt (extract : bool) ~mid_seq bound_vars depth s =
           in
           if extract then content else comment content
     | IfThenElse (e, st, sf) ->
-        ifthenelse depth
-          (string_of_expr e false bound_vars)
-          (string_of_stmt extract ~mid_seq bound_vars depth st)
-          ( if sf = Nothing then
-              if mid_seq then comment "nothing and mid-seq" else store_name
-            else string_of_stmt extract ~mid_seq bound_vars depth sf )
+        letin depth store_name
+          (ifthenelse ~noindent_first:true 0
+             (string_of_expr e false bound_vars)
+             (enforce_endswith_store
+                (string_of_stmt extract ~mid_seq bound_vars depth st) )
+             (enforce_endswith_store
+                ( if sf = Nothing then
+                    if mid_seq then
+                      comment "nothing and mid-seq" ^ " " ^ store_name
+                    else store_name
+                  else string_of_stmt extract ~mid_seq bound_vars depth sf ) ) )
   in
   (* comment (string_of_stmt_type s) ^ " " ^  *)
   f s
@@ -394,9 +381,13 @@ and all_ids_in_expr : expr -> string list = function
       [id]
   | Add (e1, e2)
   | Sub (e1, e2)
+  | Div (e1, e2)
   | Gt (e1, e2)
   | Lt (e1, e2)
+  | Geq (e1, e2)
+  | Leq (e1, e2)
   | Eq (e1, e2)
+  | Uneq (e1, e2)
   | Subscript (_, e1, e2) ->
       all_ids_in_expr e1 @ all_ids_in_expr e2
   | ProcCall (_, e) | FuncCall (_, _, e) ->
@@ -416,6 +407,8 @@ and all_ids_in_stmt : stmt -> string list = function
       all_ids_in_expr expr
   | ForLoop (_, el, eh, lb) ->
       all_ids_in_expr el @ all_ids_in_expr eh @ all_ids_in_stmt lb
+  | WhileLoop (cond, lb) ->
+      all_ids_in_expr cond @ all_ids_in_stmt lb
   | IfThenElse (expr, st, sf) ->
       all_ids_in_expr expr @ all_ids_in_stmt st @ all_ids_in_stmt sf
 
@@ -469,16 +462,17 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
         | Procedure (id, rtl) ->
             econcat " "
               ( [definition_str; sanitize_id id; "(" ^ store_name ^ ": store)"]
-              @ List.mapi
+              (* I'm going to ignore function args for a bit *)
+              (* @ List.mapi
                   (fun i rt ->
                     let t = match rt with RT n | Const n -> n | Var n -> n in
                     econcat " "
                       [ "("
                       ; "arg" ^ string_of_int i
                       ; ":"
-                      ; string_of_coq_type (type_of_return_type_root t)
+                      ; string_of_coq_type (coq_type_of_return_type_root t)
                       ; ")" ] )
-                  rtl
+                  rtl *)
               @ [":="; "\n"] )
         | Function (id, rtl, rt) ->
             econcat " "
@@ -491,7 +485,7 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
                       [ "("
                       ; "arg" ^ string_of_int i
                       ; ":"
-                      ; string_of_coq_type (type_of_return_type_root t)
+                      ; string_of_coq_type (coq_type_of_return_type_root t)
                       ; ")" ] )
                   rtl *)
               @ [":="; "\n"] )
@@ -511,7 +505,8 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
 
 (* Entry function *)
 let string_of_gallina do_preamble fn extract extract_lang extract_path func_name
-    g =
+    g gamma =
+  typctx := gamma ;
   let is_comment, body = _str_of_gal_aux extract [] g in
   econcat "\n"
     [ (if do_preamble then preamble extract extract_lang else "")

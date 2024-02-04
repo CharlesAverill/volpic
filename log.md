@@ -180,6 +180,14 @@ a bubble sort, a linear search, and a binary search. I hope to have these done
 before February 7th, when I'll be presenting this research at the Dallas Hackers'
 Association as my final talk there.
 
+I just made the mistake of trying to refresh/solidify my instructions on compiling
+FPC with my changes, and I now understand the volatility of the tree dump format
+that the FPC maintainers warned me about. The compiler started inlining things like
+fpc_dynarray_high, a function I had just got to work! Thankfully, I was able to
+fork FPC on the last stable version, 3.2.3, and reapply my changes, preserving the
+behavior I needed. I'll now just keep my own branch of FPC and set it as a dependency
+of VOLPIC.
+
 # Correctness
 
 # Verification

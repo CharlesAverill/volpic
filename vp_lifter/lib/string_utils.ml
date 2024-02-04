@@ -74,25 +74,31 @@ let contains s1 s2 =
     true
   with Not_found -> false
 
-let string_before_substr str sub =
+let string_before_substr ?(ignore_fail = false) str sub =
   try
     Str.string_before str
       ( try Str.search_forward (Str.regexp_string sub) str 0
         with Not_found ->
-          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+          if ignore_fail then String.length str - 1
+          else failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+      )
   with Not_found ->
-    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+    if ignore_fail then str
+    else failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
-let string_after_substr str sub =
+let string_after_substr ?(ignore_fail = false) str sub =
   try
     Str.string_after str
       ( try
           Str.search_backward (Str.regexp_string sub) str (length str - 1)
           + length sub
         with Not_found ->
-          failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str) )
+          if ignore_fail then String.length str - 1
+          else failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+      )
   with Not_found ->
-    failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
+    if ignore_fail then str
+    else failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
 
 let matchwith ?(noindent_first = false) depth expr cases =
   econcat " "

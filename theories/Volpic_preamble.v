@@ -56,16 +56,32 @@ Definition get_bool (VOLPIC_store : store) (s : id_type) :=
     end.
 
 Definition get_array (VOLPIC_store : store) (s : id_type) :
-    (match sf_get VOLPIC_store s with 
-     | VArray T n _ => vector T n
-     | _ => vector unit 0
+    vector (match sf_get VOLPIC_store s with 
+     | VArray T n _ => T
+     | _ => unit
+     end) (match sf_get VOLPIC_store s with 
+     | VArray T n _ => n
+     | _ => 0
      end).
-     intros. destruct (sf_get VOLPIC_store s).
-     all: try exact (Vector.nil unit).
-     exact v.
+     destruct (sf_get VOLPIC_store s);
+        try exact v;
+        exact (Vector.nil unit).
 Defined.
 
-Definition update (VOLPIC_store : store) (s : id_type) (v : value) :=
+Definition constr_varray {T : Type} {n : nat} (vec : vector T n) :=
+    VArray T n vec.
+
+(* Require Import Lia.
+Theorem test : (3 < 7)%nat. apply le_S, le_S, le_S, le_n. Qed. Print test.
+
+Definition vec : vector Z 7 := [1;2;3;4;5;6;7].
+Definition idx : nat := 2.
+Compute Vector.nth vec (Fin.of_nat_lt (le_S 4 6 (le_S 4 5 (le_S 4 4 (le_n 4))))). *)
+
+Definition subscript {T : Type} {n : nat} (v : vector T n) (idx : Z) (pf : Nat.lt (Z.to_nat idx) n) :=
+    Vector.nth v (Fin.of_nat_lt pf).
+
+Definition update (VOLPIC_store : store) (s : id_type) (v : value) : store :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else cons s (fst VOLPIC_store), 
     fun x => if String.eqb x s then v else (snd VOLPIC_store x)).
 
@@ -101,12 +117,20 @@ Extract Inlined Constant print_int => "print_int".
 
 Definition fpc_write_text_uint (s : store) (_ _ : Z) := s.
 Extract Inlined Constant fpc_write_text_uint => "(fun s x _ -> print_int x; s)".
+Definition fpc_write_text_char (s : store) (_ _ : Z) := s.
+Extract Inlined Constant fpc_write_text_char => "(fun s x _ -> print_char (char_of_int x); s)".
+Definition fpc_write_end (s : store) := s.
+Definition fpc_write_text_ansistr (s : store) (str : string) := s.
+Extract Inlined Constant fpc_write_text_ansistr => "(fun s str -> print_string str; s)".
+Definition IntToStr (s : store) (x : Z) := ""%string.
+Extract Inlined Constant IntToStr => "(fun s x -> string_of_int x)".
+Definition fpc_write_text_shortstr := fpc_write_text_ansistr.
 Definition fpc_writeln_end (s : store) := s.
 Extract Inlined Constant fpc_writeln_end => "(fun s -> print_endline String.empty; s)".
 
-Definition fpc_dynarray_high (s : store) (v : value) : store :=
-    update s "VP_result" (
-    match v with
-    | VArray _ n _ => VInteger ((Z.of_nat n) - 1)
-    | _ => VInteger 0
-    end).
+Definition fpc_dynarray_high {T: Type} {n: nat}
+        (s : store) (v : vector T n) : store :=
+    update s "VP_result" (VInteger ((Z.of_nat n) - 1)).
+
+Definition Z_noteqb (x y : Z) := negb (Z.eqb x y).
+Infix "!=?" := Z_noteqb (at level 70, no associativity) : Z_scope.

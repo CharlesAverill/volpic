@@ -1,6 +1,7 @@
 open Input
 open Vp_lifter.Parse_tree
 open Vp_lifter.String_utils
+open Vp_lifter.Logging
 
 let do_read = ref true
 
@@ -33,7 +34,7 @@ let finish_func_entry content =
 
 let process_line line_number line_content =
   (* let line_content = String.trim line_content in *)
-  if line_number mod 10000 = 0 then print_endline (string_of_int line_number) ;
+  if line_number mod 10000 = 0 then _log Log_Debug (string_of_int line_number) ;
   if contains line_content "firstpass" then do_read := false
   else if contains line_content "after parsing" then (
     do_read := true ;
@@ -97,30 +98,26 @@ let process_file fn =
 
 let read_tree original_fn use_preproc =
   let proc_fn = original_fn ^ ".proc" in
-  print_endline (string_of_bool use_preproc) ;
-  print_endline (string_of_bool (Sys.file_exists proc_fn)) ;
-  print_endline proc_fn ;
   let use_preprocessed = use_preproc && Sys.file_exists proc_fn in
   if use_preprocessed then (
-    print_endline "Reading processed file..." ;
+    _log Log_Info "Reading processed parse tree file" ;
     process_file proc_fn )
   else (
-    print_endline "Processing file..." ;
-    process_file original_fn ;
-    print_endline "Dumping processed file..." ;
+    _log Log_Info "Processing parse tree file" ;
+    (try process_file original_fn with Sys_error s -> fatal rc_CompileError s) ;
+    _log Log_Info ("Dumping processed file parse tree file to " ^ proc_fn) ;
     let oc = open_out proc_fn in
     Printf.fprintf oc "%s" (combine_funcs true) ;
     close_out oc ) ;
-  (* let _ =
-       List.map
-         (fun (rtr, content) ->
-           print_endline (string_of_return_type_root rtr) ;
-           print_endline content )
-         !funcs
-     in *)
+  (* List.rev *)
+  let l = parse_string (combine_funcs false) original_fn in
   List.rev
     (List.mapi
        (fun i pt ->
-         print_endline ("Parsing tree " ^ string_of_int i) ;
+         _log Log_Info
+           ( "Parsing tree "
+           ^ string_of_int (i + 1)
+           ^ "/"
+           ^ string_of_int (List.length l) ) ;
          {pt with is_func= true; func_type= fst (List.nth !funcs i)} )
-       (parse_string (combine_funcs false) original_fn) )
+       l )

@@ -38,7 +38,6 @@
 %type <((string * Vp_lifter.Parse_tree.optional) list) option> option(optionals)
 %type <(string * Vp_lifter.Parse_tree.optional)> optional
 %type <string list> opt_list separated_nonempty_list(SEMICOLON, qualified_type) loption(separated_nonempty_list(SEMICOLON,qualified_type))
-%type <unit option> option(COMMA)
 
 %%
 
@@ -49,7 +48,21 @@ node_list : { [] }
     | node node_list { match $1 with None -> $2 | Some n -> n :: $2 }
 
 node :
-    label NIL { None } |
+    label = label NIL { Some { 
+            is_func = false;
+            func_type = Nil;
+            pt_type = Emptynode;
+            label = label;
+            resultdef = RT Nil;
+            pos = (-1, -1);
+            loc = loc_of_string "LOC_INVALID";
+            expectloc = loc_of_string "LOC_INVALID";
+            flags = [];
+            cmplx = 0;
+            optionals = [];
+            data = [];
+            children = []
+        } } |
     label = label
     LEFT_PARENTHESIS CASEBLOCK BLOCKID COLON num = NUMBER n = node RIGHT_PARENTHESIS {
         match n with
