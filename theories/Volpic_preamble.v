@@ -17,7 +17,8 @@ Inductive value : Type :=
 | VInteger   (n : Z)
 | VBool      (b : bool)
 | VString    (s : string)
-| VArray     (T : Type) (n : nat) (v : vector T n).
+| VArray     (T : Type) (n : nat) (v : vector Z n).
+(* | VArray     (T : Type) (n : nat) (v : vector T n). *)
 
 Definition store : Type := (list id_type * (id_type -> value)).
 
@@ -55,7 +56,8 @@ Definition get_bool (VOLPIC_store : store) (s : id_type) :=
     | _ => false
     end.
 
-Definition get_array (VOLPIC_store : store) (s : id_type) :
+(* TODO : UNDO WHEN FIX ARRAYS *)
+(* Definition get_array (VOLPIC_store : store) (s : id_type) :
     vector (match sf_get VOLPIC_store s with 
      | VArray T n _ => T
      | _ => unit
@@ -66,20 +68,46 @@ Definition get_array (VOLPIC_store : store) (s : id_type) :
      destruct (sf_get VOLPIC_store s);
         try exact v;
         exact (Vector.nil unit).
+Defined. *)
+
+Definition get_array (VOLPIC_store : store) (s : id_type) :
+    vector Z (match sf_get VOLPIC_store s with | VArray T n _ => n | _ => 0 end).
+    destruct (sf_get VOLPIC_store s);
+        try exact v;
+        exact (Vector.nil Z).
 Defined.
 
-Definition constr_varray {T : Type} {n : nat} (vec : vector T n) :=
-    VArray T n vec.
+(* TODO : UNDO WHEN FIX ARRAYS *)
+(* Definition constr_varray {T : Type} {n : nat} (vec : vector T n) :=
+    VArray T n vec. *)
+Definition constr_varray {n : nat} (vec : vector Z n) :=
+    VArray Z n vec.
 
-(* Require Import Lia.
-Theorem test : (3 < 7)%nat. apply le_S, le_S, le_S, le_n. Qed. Print test.
+Definition array_type {T : Type} {n : nat} (vec : vector T n) := T.
+Definition array_size {T : Type} {n : nat} (vec : vector T n) := n.
 
-Definition vec : vector Z 7 := [1;2;3;4;5;6;7].
-Definition idx : nat := 2.
-Compute Vector.nth vec (Fin.of_nat_lt (le_S 4 6 (le_S 4 5 (le_S 4 4 (le_n 4))))). *)
+Fixpoint pad_vec {T : Type} (n : nat) (item : T) : vector T n :=
+    match n with
+    | O => []
+    | S n' => item :: (pad_vec n' item)
+    end.
 
-Definition subscript {T : Type} {n : nat} (v : vector T n) (idx : Z) (pf : Nat.lt (Z.to_nat idx) n) :=
-    Vector.nth v (Fin.of_nat_lt pf).
+Fixpoint int_array_take {x : nat} (n : nat) (vec : vector Z x) : vector Z n :=
+    match n with
+    | O => []
+    | S n' => match vec with [] => pad_vec (S n') 0 | h :: t => h :: (int_array_take n' t) end
+    end.
+
+Fixpoint subscript {T : Type} {len : nat} (vec : vector T len) (n : nat) (default : T) :=
+	match n with
+	| O => match vec with [] => default | h :: t => h end
+	| S n' => match vec with [] => default | _ :: t => subscript t n' default end
+	end.
+
+    Require Import Lia.
+Compute replace_order [1;2;3] (ltac:(lia) : (1 < 3)%nat) 9.
+
+Print store.
 
 Definition update (VOLPIC_store : store) (s : id_type) (v : value) : store :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else cons s (fst VOLPIC_store), 
@@ -134,3 +162,15 @@ Definition fpc_dynarray_high {T: Type} {n: nat}
 
 Definition Z_noteqb (x y : Z) := negb (Z.eqb x y).
 Infix "!=?" := Z_noteqb (at level 70, no associativity) : Z_scope.
+
+(* Definition setlength (s : store) (id : string) (new_len : nat) :=
+    let old_vec := get_array s id in 
+    let (T,old_len) := 
+        ((* array_type old_vec *)Z, 
+            array_size old_vec) in
+    let new_vec :=
+        if (old_len <? new_len)%nat then 
+            append old_vec (pad_vec (new_len - old_len) 0)
+        else
+            int_array_take new_len old_vec in 
+    update s id (VArray T new_len new_vec). *)

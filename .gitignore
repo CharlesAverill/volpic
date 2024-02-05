@@ -1,7 +1,4 @@
-*
-!*.*
 tex-fpc
-tex-mf-fpc
 _build
 
 *~
@@ -22,12 +19,14 @@ parser.output
 *.vok
 *.vos
 *.glob
-theories/Makefile
-theories/Makefile.conf
-theories/.Makefile.d
 peda-session*
 tree.log
 tree.log.proc
+theories/*Makefile*
+theories/.lia.cache
+theories/test.*
+theories/tex.*
+theories/mf.*
 *.mli
 a.out
-theories/a.out
+.gdb_history
