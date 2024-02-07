@@ -285,6 +285,10 @@ Proof.
 	simpl. rewrite String.eqb_refl. reflexivity.
 Qed.
 
+Require Import FunctionalExtensionality.
+
+Check functional_extensionality.
+
 Lemma vsc_false_for_nil :
 	forall (T : Type) key idx,
 	~ (@vector_search_correct T 0 [] key idx).
@@ -292,26 +296,109 @@ Proof.
 	intros. intro. inversion H.
 Qed.
 
-Theorem linear_search_correct_pascal :
-	forall (loop_limit : nat) (s out : store) (key : Z) (len : nat) 
-		(vec : vector Z len) (Zidx : Z)
-	(OUT : out = linear_search (update s "VP_KEY" (VInteger key)) loop_limit vec)
-	(IDX : Zidx = get_int out "VP_result")
-	(FOUND : Zidx >= 0),
-	vector_search_correct vec key (Z.to_nat Zidx).
+(* Theorem mwe : 
+	forall loop_limit max_i,
+	0 < max_i ->
+	max_i < (Z.of_nat loop_limit) ->
+	(fix loop loop_limit store :=
+		match loop_limit with
+		| O => None
+		| S n' => (
+			(* Loop condition *)
+			if (get_int store "I" >=? max_i) then 
+				(* Loop terminates *)
+				Some store
+			else (
+				(* Loop body *)
+				let store' :=
+					update store "I" (VInteger (get_int store "I" + 1)) 
+				in loop n' store'
+			)
+		)
+		end
+	) loop_limit (update fresh_store "I" (VInteger 0)) <> None.
 Proof.
 	induction loop_limit; intros; simpl in *.
-	- (* If loop limit is 0, result is always -1, which contradicts FOUND *)
-		unfold vector_search_correct, linear_search, to_list in *; simpl in *.
-		rewrite OUT in IDX. rewrite get_int_update in IDX. lia.
-	- unfold linear_search in OUT; simpl in *.
-		unfold fpc_dynarray_high in OUT. induction vec; simpl in *.
+	- lia.
+	- rewrite get_int_update. rewrite Z.geb_leb. 
+		apply Zlt_compare in H. destruct (0 ?= max_i) eqn:E. lia.
+		apply -> Z.compare_lt_iff in E. destruct (max_i <=? 0).
+		intro H1; inversion H1.  *)
+
+Theorem update_cancel :
+	forall (s: store) x y1 y2,
+		update (update s x y1) x y2 = update s x y2.
+Proof.
+	intros. apply functional_extensionality. intro z. unfold update.
+	destruct (z =? x)%string; reflexivity.
+Qed.
+
+Theorem update_frame :
+  forall (s: store) x y z (NE: z<>x),
+  update s x y z = s z.
+Proof.
+  intros. unfold update. destruct (z =? x)%string eqn:E.
+    exfalso. apply NE, String.eqb_eq. assumption.
+    reflexivity.
+Qed.
+
+Definition linear_search' (VP_store: store) (loop_limit : nat) {arr_len : nat} (vec : vector Z arr_len) := 
+	let VP_poison := false in
+	let (VP_store,VP_poison) := 
+		(if (negb VP_poison) then
+ 			 (update VP_store "VP_result" (VInteger ( -1 )),VP_poison) 
+		else
+ 			(VP_store,true)) in
+	let (VP_store,VP_poison) := 
+		(if (negb VP_poison) then
+ 			 (match 
+(let going_up := true in
+		let bounds_op := Z.leb in
+		let iter_op := Z.add 1 in
+(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) (i : Z) := 
+ 			 match VP_depth with 
+ 				 | O => None
+				 | S n' => if (negb VP_broken) && (bounds_op i (get_int (fpc_dynarray_high VP_store vec) "VP_result")) then
+ 				 (let VP_store := (let VP_store := if (subscript vec (Z.to_nat i) 0 =? get_int VP_store "VP_KEY") then
+ 	 ((*Block: next 2 statements*)
+			let VP_store := update VP_store "VP_result" (VInteger i) in
+			let VP_broken := true in VP_store) 
+else
+ 	((*nothing and mid-seq*) VP_store) in VP_store) in loop n' VP_broken VP_store (iter_op i)) 
+			else
+ 				(Some VP_store)
+				 			 end) loop_limit false VP_store 0) with 
+ 		 | None => (VP_store,true)
+		 | Some VP_store' => (VP_store',VP_poison)
+		 	 end) 
+		else
+ 			(VP_store,true)) in
+(VP_store,VP_poison).
+
+Theorem linear_search'_correct_pascal :
+	forall (loop_limit : nat) (s s' : store) (key : Z) (len : nat) 
+		(vec : vector Z len) (Zidx : Z) poison,
+	poison = false ->
+	((s', poison) = linear_search' (update s "VP_KEY" (VInteger key)) loop_limit vec) ->
+	(Zidx = get_int s' "VP_result") ->
+	(0 <= Zidx) ->
+	vector_search_correct vec key (Z.to_nat Zidx).
+Proof.
+	intros loop_limit s s' key len vec. revert loop_limit s s' key. 
+		induction vec; intros loop_limit s s' key Zidx poison PFALSE OUT IDX ZLTIDX;
+		unfold linear_search' in OUT; simpl in *.
+	- unfold fpc_dynarray_high in OUT. unfold get_int at 1 in OUT.
+		unfold sf_get in OUT. simpl in OUT. destruct loop_limit in OUT.
+			-- inversion OUT; subst; contradiction.
+			-- simpl in OUT. inversion OUT; subst. 
+				rewrite get_int_update in ZLTIDX. lia.
+	- unfold fpc_dynarray_high in OUT. unfold get_int at 1 in OUT.
+		unfold sf_get in OUT. simpl in OUT. 
 Abort.
-	  
 
 
 
-Definition binary_search (VP_store: store) := 
+(* Definition binary_search (VP_store: store) := 
 	let VP_poison := false in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
@@ -352,9 +439,9 @@ else
 		else
  			(VP_store,true)) in
 VP_store.
-Extraction "algorithms.ml" binary_search.
+Extraction "algorithms.ml" binary_search. *)
 
-Definition main (VP_store: store) := 
+(* Definition main (VP_store: store) := 
 	let VP_poison := false in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
@@ -465,6 +552,6 @@ Definition main (VP_store: store) :=
 		else
  			(VP_store,true)) in
 VP_store.
-Extraction "algorithms.ml" $main.
+Extraction "algorithms.ml" $main. *)
 
-Compute (main fresh_store).
+(* Compute (main fresh_store). *)

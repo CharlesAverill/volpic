@@ -20,11 +20,13 @@ Inductive value : Type :=
 | VArray     (T : Type) (n : nat) (v : vector Z n).
 (* | VArray     (T : Type) (n : nat) (v : vector T n). *)
 
-Definition store : Type := (list id_type * (id_type -> value)).
+(* Definition store : Type := (list id_type * (id_type -> value)). *)
+Definition store : Type := id_type -> value.
 
-Definition fresh_store : store := (nil, fun _ => VNull).
+(* Definition fresh_store : store := (nil, fun _ => VNull). *)
+Definition fresh_store : store := fun _ => VNull.
 
-Definition ids : store -> list id_type := fst.
+(* Definition ids : store -> list id_type := fst.
 Definition in_ids (VOLPIC_store : store) (s : id_type) :=
     (fix f l := match l with 
         | nil => false
@@ -34,9 +36,10 @@ Definition all_in_ids (VOLPIC_store : store) (l : list id_type) :=
     List.fold_left (
         fun acc item => 
             andb acc (in_ids VOLPIC_store item)
-    ) l true.
+    ) l true. *)
 
-Definition sf_get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s.
+(* Definition sf_get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s. *)
+Definition sf_get (s : store) id := s id.
 
 Definition get_int (VOLPIC_store : store) (s : id_type) :=
     match sf_get VOLPIC_store s with
@@ -109,11 +112,15 @@ Compute replace_order [1;2;3] (ltac:(lia) : (1 < 3)%nat) 9.
 
 Print store.
 
-Definition update (VOLPIC_store : store) (s : id_type) (v : value) : store :=
+(* Definition update (VOLPIC_store : store) (s : id_type) (v : value) : store :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else cons s (fst VOLPIC_store), 
-    fun x => if String.eqb x s then v else (snd VOLPIC_store x)).
+    fun x => if String.eqb x s then v else (snd VOLPIC_store x)). *)
+Definition update (s : store) (x : id_type) (y : value) (id : id_type) : value :=
+    if id =? x then y else s id.
+Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity, format "f '/' [ x  :=  y ]").
 
-Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
+
+(* Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
     let record_ids := List.filter (String.prefix source_prefix) (ids source_store) in
     List.fold_left (fun acc id => update acc (
         String.append dest_prefix (
@@ -122,7 +129,7 @@ Definition update_record (dest_store : store) (dest_prefix : id_type) (source_st
                 ((String.length id) - (String.length source_prefix)) 
                 id
         )
-    ) (sf_get source_store id)) record_ids dest_store.
+    ) (sf_get source_store id)) record_ids dest_store. *)
 
 Definition multi_ands bl :=
     List.fold_left andb bl true.
