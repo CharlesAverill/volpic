@@ -1,24 +1,21 @@
 Require Import String.
 Require Import ZArith.
-Require Import Vector.
 Require Import List.
-Import VectorNotations.
+Import ListNotations.
 Open Scope Z.
 Open Scope string_scope.
+Open Scope list_scope.
 
 Declare Scope vp_scope.
 Open Scope vp_scope.
 Definition id_type := string.
-
-Definition vector := t.
 
 Inductive value : Type :=
 | VNull
 | VInteger   (n : Z)
 | VBool      (b : bool)
 | VString    (s : string)
-| VArray     (T : Type) (n : nat) (v : vector Z n).
-(* | VArray     (T : Type) (n : nat) (v : vector T n). *)
+| VArray     (T : Set) (n : nat) (v : list T).
 
 (* Definition store : Type := (list id_type * (id_type -> value)). *)
 Definition store : Type := id_type -> value.
@@ -39,22 +36,22 @@ Definition all_in_ids (VOLPIC_store : store) (l : list id_type) :=
     ) l true. *)
 
 (* Definition sf_get (VOLPIC_store : store) (s : id_type) := (snd VOLPIC_store) s. *)
-Definition sf_get (s : store) id := s id.
+(* Definition sf_get (s : store) id := s id. *)
 
 Definition get_int (VOLPIC_store : store) (s : id_type) :=
-    match sf_get VOLPIC_store s with
+    match VOLPIC_store s with
     | VInteger n => n
     | _ => 0
     end.
 
 Definition get_string (VOLPIC_store : store) (s : id_type) :=
-    match sf_get VOLPIC_store s with
+    match VOLPIC_store s with
     | VString s => s
     | _ => EmptyString
     end.
 
 Definition get_bool (VOLPIC_store : store) (s : id_type) :=
-    match sf_get VOLPIC_store s with
+    match VOLPIC_store s with
     | VBool b => b
     | _ => false
     end.
@@ -73,44 +70,46 @@ Definition get_bool (VOLPIC_store : store) (s : id_type) :=
         exact (Vector.nil unit).
 Defined. *)
 
-Definition get_array (VOLPIC_store : store) (s : id_type) :
+(* Definition get_array (VOLPIC_store : store) (s : id_type) :
     vector Z (match sf_get VOLPIC_store s with | VArray T n _ => n | _ => 0 end).
     destruct (sf_get VOLPIC_store s);
         try exact v;
         exact (Vector.nil Z).
+Defined. *)
+
+Definition get_array (VOLPIC_store : store) (s : id_type) :
+    list (match VOLPIC_store s with VArray T _ _ => T | _ => Z end).
+    destruct (VOLPIC_store s);
+        try exact v;
+        exact [].
 Defined.
 
 (* TODO : UNDO WHEN FIX ARRAYS *)
 (* Definition constr_varray {T : Type} {n : nat} (vec : vector T n) :=
     VArray T n vec. *)
-Definition constr_varray {n : nat} (vec : vector Z n) :=
-    VArray Z n vec.
+(* Definition constr_varray {n : nat} (vec : vector Z n) :=
+    VArray Z n vec. *)
 
-Definition array_type {T : Type} {n : nat} (vec : vector T n) := T.
-Definition array_size {T : Type} {n : nat} (vec : vector T n) := n.
-
-Fixpoint pad_vec {T : Type} (n : nat) (item : T) : vector T n :=
+Fixpoint pad_vec {T : Type} (n : nat) (item : T) : list T :=
     match n with
     | O => []
     | S n' => item :: (pad_vec n' item)
     end.
 
-Fixpoint int_array_take {x : nat} (n : nat) (vec : vector Z x) : vector Z n :=
+Fixpoint array_take {T : Type} (n : nat) (vec : list T) : list T :=
     match n with
     | O => []
-    | S n' => match vec with [] => pad_vec (S n') 0 | h :: t => h :: (int_array_take n' t) end
+    | S n' => match vec with [] => [] | h :: t => h :: (array_take n' t) end
     end.
 
-Fixpoint subscript {T : Type} {len : nat} (vec : vector T len) (n : nat) (default : T) :=
+Fixpoint subscript_nat {T : Type} (vec : list T) (n : nat) : option T :=
 	match n with
-	| O => match vec with [] => default | h :: t => h end
-	| S n' => match vec with [] => default | _ :: t => subscript t n' default end
+	| O => match vec with [] => None | h :: t => Some h end
+	| S n' => match vec with [] => None | _ :: t => subscript_nat t n' end
 	end.
 
-    Require Import Lia.
-Compute replace_order [1;2;3] (ltac:(lia) : (1 < 3)%nat) 9.
-
-Print store.
+Definition subscript {T : Type} (vec : list T) (n : Z) : option T :=
+    subscript_nat vec (Z.to_nat n).
 
 (* Definition update (VOLPIC_store : store) (s : id_type) (v : value) : store :=
     (if in_ids VOLPIC_store s then (fst VOLPIC_store) else cons s (fst VOLPIC_store), 
@@ -118,7 +117,6 @@ Print store.
 Definition update (s : store) (x : id_type) (y : value) (id : id_type) : value :=
     if id =? x then y else s id.
 Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity, format "f '/' [ x  :=  y ]").
-
 
 (* Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
     let record_ids := List.filter (String.prefix source_prefix) (ids source_store) in
@@ -151,6 +149,7 @@ Axiom print_int : Z -> unit.
 Extract Inlined Constant print_int => "print_int".
 
 Definition fpc_write_text_uint (s : store) (_ _ : Z) := s.
+Definition fpc_write_text_sint := fpc_write_text_uint.
 Extract Inlined Constant fpc_write_text_uint => "(fun s x _ -> print_int x; s)".
 Definition fpc_write_text_char (s : store) (_ _ : Z) := s.
 Extract Inlined Constant fpc_write_text_char => "(fun s x _ -> print_char (char_of_int x); s)".
@@ -161,23 +160,37 @@ Definition IntToStr (s : store) (x : Z) := ""%string.
 Extract Inlined Constant IntToStr => "(fun s x -> string_of_int x)".
 Definition fpc_write_text_shortstr := fpc_write_text_ansistr.
 Definition fpc_writeln_end (s : store) := s.
+Definition printchar := fpc_write_text_char.
 Extract Inlined Constant fpc_writeln_end => "(fun s -> print_endline String.empty; s)".
 
-Definition fpc_dynarray_high {T: Type} {n: nat}
-        (s : store) (v : vector T n) : store :=
-    update s "VP_result" (VInteger ((Z.of_nat n) - 1)).
+Definition fpc_length {T : Type} 
+
+Definition fpc_dynarray_high {T: Type}
+        (s : store) (v : list T) : store :=
+    update s "VP_result" (VInteger ((Z.of_nat (List.length v)) - 1)).
 
 Definition Z_noteqb (x y : Z) := negb (Z.eqb x y).
 Infix "!=?" := Z_noteqb (at level 70, no associativity) : Z_scope.
 
-(* Definition setlength (s : store) (id : string) (new_len : nat) :=
-    let old_vec := get_array s id in 
-    let (T,old_len) := 
-        ((* array_type old_vec *)Z, 
-            array_size old_vec) in
-    let new_vec :=
-        if (old_len <? new_len)%nat then 
-            append old_vec (pad_vec (new_len - old_len) 0)
-        else
-            int_array_take new_len old_vec in 
-    update s id (VArray T new_len new_vec). *)
+Definition list_type {T : Type} (_ : list T) := T.
+
+Definition set_length :
+    forall (s : store) (id : string) (new_len : nat)
+        (default : match s id with VArray T _ _ => T | _ => Z end),
+    store.
+Proof.
+    intros.
+        destruct (s id) eqn:E; 
+            (* Filter out non-lists *)
+            (assert (v = v) by reflexivity) || exact s.
+        remember (length v) as old_len.
+        destruct (old_len <? new_len)%nat.
+        - (* true *)
+            exact (update s id (VArray T new_len (
+                v ++ (pad_vec (new_len - old_len) default)
+            ))).
+        - (* false *)
+            exact (update s id (VArray T new_len (
+                array_take new_len v
+            ))).
+Defined.

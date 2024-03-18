@@ -86,8 +86,11 @@ let rec coq_type_of_return_type_root r =
   | LongInt
   | Word
   | Byte
+  | Char
   | ShortInt ->
       Z
+  | ShortString ->
+      String
   | Record _ ->
       Record
   | Array (_, _, r) ->
@@ -134,9 +137,19 @@ let rec id_of_parse_tree parse_tree =
 let proc_of_inline i =
   match i with
   | "in_setlength_x" ->
-      ProcFunc ("setlength", "Int64", "{dynamic} array of nil")
+      ProcFunc
+        ( "vp_setlength"
+        , "Int64"
+        , (* "{dynamic} array of nil" *)
+          (* not sure why I had this for a while?*)
+          "" )
   | "in_length_x" ->
-      ProcFunc ("length", "Int64", "{dynamic} array of nil")
+      ProcFunc
+        ( "vp_length"
+        , (* "Int64", "{dynamic} array of nil" *)
+          (* Same here?*)
+          "array of int"
+        , "Int64" )
   | _ ->
       failwith ("Inline function " ^ i ^ " not yet supported")
 
@@ -204,6 +217,7 @@ let rec expr_of_parse_tree parse_tree =
   | Call -> (
       let procdata = find_data parse_tree.data "proc" in
       let proc = string_of_vtype procdata in
+      (* get_procfunc parse_tree procdata *)
       match procdata with
       | ProcFunc (id, _, rt) ->
           if rt = "" then ProcCall (proc, find_parans parse_tree.children)
@@ -215,23 +229,24 @@ let rec expr_of_parse_tree parse_tree =
       | _ ->
           exc Log_Error ("Expected procedure or Function call, but got " ^ proc)
       )
-  | Inline -> (
+  | Inline ->
       let proc =
         proc_of_inline
           (string_of_optional (find_data parse_tree.optionals "inlinenumber"))
       in
-      match proc with
-      | ProcFunc (id, _, rt) ->
-          if rt = "" then ProcCall (id, find_parans parse_tree.children)
-          else
-            FuncCall
-              ( id
-              , return_type_root_of_string rt
-              , find_parans parse_tree.children )
-      | _ ->
-          exc Log_Error
-            ( "Expected procedure or Function call, but got "
-            ^ string_of_vtype proc ) )
+      get_procfunc parse_tree proc
+      (* match proc with
+         | ProcFunc (id, _, rt) ->
+             if rt = "" then ProcCall (id, find_parans parse_tree.children)
+             else
+               FuncCall
+                 ( id
+                 , return_type_root_of_string rt
+                 , find_parans parse_tree.children )
+         | _ ->
+             exc Log_Error
+               ( "Expected procedure or Function call, but got "
+               ^ string_of_vtype proc ) *)
   | Callpara ->
       List.hd (find_parans [parse_tree])
   | Deref ->
@@ -259,21 +274,21 @@ and find_parans l =
             ^ " not yet supported for function argument parsing" ) )
     l
 
+and get_procfunc (parse_tree : parse_tree_node) proc =
+  match proc with
+  | ProcFunc (id, args, rt) ->
+      if rt = "" then
+        ProcCall (id, List.map expr_of_parse_tree parse_tree.children)
+      else
+        FuncCall
+          ( id
+          , return_type_root_of_string rt
+          , List.map expr_of_parse_tree parse_tree.children )
+  | _ ->
+      failwith (* fatal rc_ConversionError *)
+        ("Expected ProcFunc, got " ^ string_of_vtype proc)
+
 let rec stmt_of_parse_tree parse_tree =
-  let get_procfunc proc =
-    match proc with
-    | ProcFunc (id, args, rt) ->
-        if rt = "" then
-          ProcCall (id, List.map expr_of_parse_tree parse_tree.children)
-        else
-          FuncCall
-            ( id
-            , return_type_root_of_string rt
-            , List.map expr_of_parse_tree parse_tree.children )
-    | _ ->
-        failwith (* fatal rc_ConversionError *)
-          ("Expected ProcFunc, got " ^ string_of_vtype proc)
-  in
   match parse_tree.pt_type with
   | Assign ->
       if (List.hd parse_tree.children).pt_type = Tempref then Nothing
@@ -328,7 +343,7 @@ let rec stmt_of_parse_tree parse_tree =
   | Call ->
       SideEffect
         (let proc = find_data parse_tree.data "proc" in
-         get_procfunc proc )
+         get_procfunc parse_tree proc )
       (* (ProcCall
          ( string_of_vtype (find_data parse_tree.data "proc")
          , List.map expr_of_parse_tree parse_tree.children ) ) *)
@@ -339,7 +354,7 @@ let rec stmt_of_parse_tree parse_tree =
              (string_of_optional
                 (find_data parse_tree.optionals "inlinenumber") )
          in
-         get_procfunc proc )
+         get_procfunc parse_tree proc )
   | _ ->
       exc Log_Error
         ( string_of_parse_tree_type parse_tree.pt_type

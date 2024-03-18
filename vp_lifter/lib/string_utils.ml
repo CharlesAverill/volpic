@@ -79,7 +79,7 @@ let string_before_substr ?(ignore_fail = false) str sub =
     Str.string_before str
       ( try Str.search_forward (Str.regexp_string sub) str 0
         with Not_found ->
-          if ignore_fail then String.length str - 1
+          if ignore_fail then String.length str
           else failwith ("Couldn't find substring " ^ sub ^ " in string " ^ str)
       )
   with Not_found ->

@@ -16,7 +16,14 @@ Import VectorNotations.
 Print List.nth.
 Print Vector.t.
 
+Definition vector := Vector.t.
 
+Definition subscript_Z (vec : list Z) (n : Z) : option Z :=
+	(fix aux (vec : list Z) n :=
+		match n with
+		| O => match vec with []%list => None | (h :: t)%list => Some h end
+		| S n' => match vec with []%list => None | (_ :: t)%list => aux t n' end
+		end) vec (Z.to_nat n).
 
 Definition print_arr {n : nat} (VP_store: store) (vec : vector Z n) := 
 	let VP_poison := false in

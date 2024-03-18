@@ -13,13 +13,20 @@ let preamble extract extract_lang =
   let req_imps =
     List.map
       (fun x -> "Require Import " ^ x ^ ".")
-      ( ["Volpic_preamble"; "String"; "ZArith"; "List"; "Bool"]
+      ( [ "Volpic_preamble"
+        ; "Volpic_notation"
+        ; "String"
+        ; "ZArith"
+        ; "List"
+        ; "Bool" ]
       @
       if extract then [coq_extraction_dep "Basic"; coq_extraction_dep "String"]
       else [] )
   in
   let scopes =
-    List.map (fun x -> "Open Scope " ^ x ^ ".") ["string_scope"; "Z_scope"]
+    List.map
+      (fun x -> "Open Scope " ^ x ^ ".")
+      ["string_scope"; "Z_scope"; "volpic_notation"]
   in
   let imports = List.map (fun x -> "Import " ^ x ^ ".") ["ListNotations"] in
   econcat "\n"
@@ -177,7 +184,7 @@ let store_string_of_return_type rtr =
       failwith
         ( "RTR "
         ^ string_of_return_type_root rtr
-        ^ " not yet supported in store_string_of_expr" )
+        ^ " not yet supported in store_string_of_return_type" )
 
 let constr_of_coq_type = function
   | Z ->
@@ -221,36 +228,56 @@ let store_string_of_expr e bound_vars =
 
 let rec loop condition body post depth =
   econcat " "
-    [ parens
-        (econcat " "
-           [ "fix"
-           ; "loop"
-           ; parens (vp_depth ^ " : nat")
-           ; parens (broken ^ " : bool")
-           ; parens (store_name ^ " : store")
-           ; ":="
-           ; "\n"
-           ; matchwith depth vp_depth
-               [ ("O", "None")
-               ; ( "S n'"
-                 , ifthenelse depth condition
-                     (parens ~parens_req_spaces:false
-                        (econcat " "
-                           [ letin depth store_name
-                               (parens ~parens_req_spaces:false
-                                  (econcat "\n"
-                                     [body; enforce_endswith_store post] ) )
-                             (* letin depth store_name
-                                    (parens ~parens_req_spaces:false body)
-                                ; enforce_endswith_store post *)
-                           ; "loop"
-                           ; "n'" (* ; parens (id ^ " + 1") *)
-                           ; broken
-                           ; store_name ] ) )
-                     ("Some " ^ store_name) ) ] ] )
+    [ "while"
+    ; "("
+    ; econcat " " ["fun"; store_name; "=>"; condition]
+    ; ")"
+    ; "with"
+    ; store_name
+    ; "upto"
     ; "1000%nat"
-    ; "false"
-    ; store_name ]
+    ; "begin"
+    ; econcat " "
+        [ "fun"
+        ; store_name
+        ; "=>"
+        ; econcat "\n" [body; enforce_endswith_store post] ]
+    ; "end" ]
+
+(* let rec loop condition body post depth =
+   econcat " "
+     [ letin depth "loop"
+         (parens
+            (econcat " "
+               [ "fix"
+               ; "loop"
+               ; parens (vp_depth ^ " : nat")
+               ; parens (broken ^ " : bool")
+               ; parens (store_name ^ " : store")
+               ; ":="
+               ; "\n"
+               ; matchwith depth vp_depth
+                   [ ("O", "None")
+                   ; ( "S n'"
+                     , ifthenelse depth condition
+                         (parens ~parens_req_spaces:false
+                            (econcat " "
+                               [ letin depth store_name
+                                   (parens ~parens_req_spaces:false
+                                      (econcat "\n"
+                                         [body; enforce_endswith_store post] ) )
+                                 (* letin depth store_name
+                                        (parens ~parens_req_spaces:false body)
+                                    ; enforce_endswith_store post *)
+                               ; "loop"
+                               ; "n'" (* ; parens (id ^ " + 1") *)
+                               ; broken
+                               ; store_name ] ) )
+                         ("Some " ^ store_name) ) ] ] ) )
+     ; "loop"
+     ; "1000%nat"
+     ; "false"
+     ; store_name ] *)
 
 and string_of_stmt (extract : bool) ~mid_seq bound_vars depth s =
   (* TODO : For function calls, clear the 'result' variable after using it *)

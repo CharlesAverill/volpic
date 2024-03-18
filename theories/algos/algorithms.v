@@ -28,7 +28,7 @@ Definition print_arr (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") (get_int (fpc_dynarray_high VP_store (get_array VP_store "VP_ARR")) "VP_result")) then
@@ -45,7 +45,7 @@ else
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 
@@ -75,7 +75,7 @@ Definition bubble_sort (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") (get_int (fpc_dynarray_high VP_store (get_array VP_store "VP_ARR")) "VP_result")) then
@@ -83,7 +83,7 @@ Definition bubble_sort (VP_store: store) :=
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 
@@ -96,7 +96,7 @@ Definition bubble_sort (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( get_int (fpc_dynarray_high VP_store (get_array VP_store "VP_result")) "VP_result" - 1 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") 0) then
@@ -104,7 +104,7 @@ Definition bubble_sort (VP_store: store) :=
 			let bounds_op := (if going_up then Z.leb else Z.geb) in
 			let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 			let VP_store := update VP_store "VP_J" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+				let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  				 match VP_depth with 
  					 | O => None
 					 | S n' => if (bounds_op (get_int VP_store "VP_J") (get_int VP_store "VP_I")) then
@@ -118,11 +118,11 @@ else
 			let VP_store := update VP_store "VP_J" (VInteger (iter_op (get_int VP_store "VP_J"))) in VP_store) in loop n' VP_broken VP_store) 
 				else
  					(Some VP_store)
-					 				 end) 1000%nat false VP_store
+					 				 end) in loop 1000%nat false VP_store
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 
@@ -145,7 +145,7 @@ Definition simple_loop (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") 10) then
@@ -155,7 +155,7 @@ Definition simple_loop (VP_store: store) :=
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 
@@ -178,7 +178,7 @@ Definition linear_search (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") (get_int (fpc_dynarray_high VP_store (get_array VP_store "VP_ARR")) "VP_result")) then
@@ -191,7 +191,7 @@ else
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 
@@ -219,7 +219,7 @@ Definition binary_search (VP_store: store) :=
  			(VP_store,true)) in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
- 			 ((fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+ 			 (let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  		 match VP_depth with 
  			 | O => None
 			 | S n' => if (get_int VP_store "VP_L" <=? get_int VP_store "VP_R") then
@@ -237,7 +237,7 @@ else
  	(update VP_store "VP_R" (VInteger ( get_int VP_store "VP_M" - 1 ))) in) in loop n' VP_broken VP_store) 
 		else
  			(Some VP_store)
-			 		 end) 1000%nat false VP_store,VP_poison) 
+			 		 end) in loop 1000%nat false VP_store,VP_poison) 
 		else
  			(VP_store,true)) in
 VP_store.
@@ -257,7 +257,7 @@ Definition main (VP_store: store) :=
 		let bounds_op := (if going_up then Z.leb else Z.geb) in
 		let iter_op := (if going_up then (Z.add 1) else (Z.sub 1)) in
 		let VP_store := update VP_store "VP_I" (VInteger ( 0 )) in
-(fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
+			let loop := (fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
  			 match VP_depth with 
  				 | O => None
 				 | S n' => if (bounds_op (get_int VP_store "VP_I") (get_int (fpc_dynarray_high VP_store (get_array VP_store "VP_ARR")) "VP_result")) then
@@ -265,7 +265,7 @@ Definition main (VP_store: store) :=
 		let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store) in loop n' VP_broken VP_store) 
 			else
  				(Some VP_store)
-				 			 end) 1000%nat false VP_store) with 
+				 			 end) in loop 1000%nat false VP_store) with 
  		 | None => (VP_store,true)
 		 | Some VP_store' => (VP_store',VP_poison)
 		 	 end) 

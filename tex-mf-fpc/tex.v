@@ -1,5 +1,6 @@
 (*Preamble*)
 Require Import Volpic_preamble.
+Require Import Volpic_notation.
 Require Import String.
 Require Import ZArith.
 Require Import List.
@@ -9,8 +10,8 @@ Require Import ExtrOcamlString.
 Extraction Language OCaml.
 Open Scope string_scope.
 Open Scope Z_scope.
+Open Scope volpic_notation.
 Import ListNotations.
-
 
 (*Failed to convert initialize: Couldn't find key "field" in data list*)
 
@@ -30,19 +31,12 @@ Definition printthedigs (VP_store: store) :=
 	let VP_poison := false in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
- 			 ((fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
- 		 match VP_depth with 
- 			 | O => None
-			 | S n' => if (get_int VP_store "VP_K" >? 0) then
- 			 (let VP_store := ((*Block: next 2 statements*)
+ 			 (while ( fun VP_store => get_int VP_store "VP_K" >? 0 ) with VP_store upto 1000%nat begin fun VP_store => (*Block: next 2 statements*)
 		let VP_store := update VP_store "VP_K" (VInteger ( get_int VP_store "VP_K" - 1 )) in
-		let VP_store := if (subscript (VP_store "VP_DIG") (get_int VP_store "VP_K") 0 <? 10) then
+		let VP_store := if (subscript (get_array VP_store "VP_DIG") (get_int VP_store "VP_K") 0 <? 10) then
  	 (let VP_store := printchar VP_store (48 + subscript (VP_store "VP_DIG") (get_int VP_store "VP_K") 0) in VP_store) 
 else
- 	(let VP_store := printchar VP_store (55 + subscript (VP_store "VP_DIG") (get_int VP_store "VP_K") 0) in VP_store) in) in loop n' VP_broken VP_store) 
-		else
- 			(Some VP_store)
-			 		 end) 1000%nat false VP_store,VP_poison) 
+ 	(let VP_store := printchar VP_store (55 + subscript (VP_store "VP_DIG") (get_int VP_store "VP_K") 0) in VP_store) in VP_store end,VP_poison) 
 		else
  			(VP_store,true)) in
 VP_store.
@@ -199,16 +193,9 @@ Definition printcurrentstring (VP_store: store) :=
  			(VP_store,true)) in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
- 			 ((fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
- 		 match VP_depth with 
- 			 | O => None
-			 | S n' => if (get_int VP_store "VP_J" <? get_int VP_store "VP_POOLPTR") then
- 			 (let VP_store := (*Block: next 2 statements*)
+ 			 (while ( fun VP_store => get_int VP_store "VP_J" <? get_int VP_store "VP_POOLPTR" ) with VP_store upto 1000%nat begin fun VP_store => (*Block: next 2 statements*)
 		let VP_store := printchar VP_store (subscript (VP_store "VP_STRPOOL") (get_int VP_store "VP_J") 0) in
-update VP_store "VP_J" (VInteger ( get_int VP_store "VP_J" + 1 )) in loop n' VP_broken VP_store) 
-		else
- 			(Some VP_store)
-			 		 end) 1000%nat false VP_store,VP_poison) 
+update VP_store "VP_J" (VInteger ( get_int VP_store "VP_J" + 1 )) end,VP_poison) 
 		else
  			(VP_store,true)) in
 VP_store.
@@ -519,14 +506,7 @@ Definition scanoptionalequals (VP_store: store) :=
 	let VP_poison := false in
 	let (VP_store,VP_poison) := 
 		(if (negb VP_poison) then
- 			 ((fix loop (VP_depth : nat) (VP_broken : bool) (VP_store : store) := 
- 		 match VP_depth with 
- 			 | O => None
-			 | S n' => if (get_int VP_store "VP_CURCMD" !=? 10) then
- 			 (let VP_store := (let VP_store := getxtoken VP_store in) in loop n' VP_broken VP_store) 
-		else
- 			(Some VP_store)
-			 		 end) 1000%nat false VP_store,VP_poison) 
+ 			 (while ( fun VP_store => get_int VP_store "VP_CURCMD" !=? 10 ) with VP_store upto 1000%nat begin fun VP_store => 		let VP_store := getxtoken VP_store in end,VP_poison) 
 		else
  			(VP_store,true)) in
 	let (VP_store,VP_poison) := 
@@ -1287,7 +1267,7 @@ Extraction "tex.ml" alterinteger.
 
 (*Failed to convert finalcleanup: Couldn't find key "field" in data list*)
 
-(*Failed to convert execeditor: Expected procedure or Function call, but got $makestring:SmallInt*)
+(*Failed to convert execeditor: Couldn't find key "value" in data list*)
 
 (*Failed to convert $main: goton not yet supported for statement parsing*)
 
