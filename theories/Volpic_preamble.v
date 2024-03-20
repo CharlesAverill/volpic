@@ -116,7 +116,6 @@ Definition subscript {T : Type} (vec : list T) (n : Z) : option T :=
     fun x => if String.eqb x s then v else (snd VOLPIC_store x)). *)
 Definition update (s : store) (x : id_type) (y : value) (id : id_type) : value :=
     if id =? x then y else s id.
-Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity, format "f '/' [ x  :=  y ]").
 
 (* Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
     let record_ids := List.filter (String.prefix source_prefix) (ids source_store) in
@@ -162,8 +161,6 @@ Definition fpc_write_text_shortstr := fpc_write_text_ansistr.
 Definition fpc_writeln_end (s : store) := s.
 Definition printchar := fpc_write_text_char.
 Extract Inlined Constant fpc_writeln_end => "(fun s -> print_endline String.empty; s)".
-
-Definition fpc_length {T : Type} 
 
 Definition fpc_dynarray_high {T: Type}
         (s : store) (v : list T) : store :=
