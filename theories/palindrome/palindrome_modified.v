@@ -19,6 +19,21 @@ Definition string_subscript (s : string) (idx : Z) : Z :=
 	| Some a => Z.of_nat (Ascii.nat_of_ascii a)
 	end.
 
+Definition loop_body VP_store loop_limit :=
+	let bounds_op := Z.leb in
+	let iter_op := Z.add 1 in
+	while ( fun VP_store => bounds_op (get_int VP_store "VP_I") (get_int VP_store "VP_LEN" / 2) ) with VP_store upto loop_limit 
+	begin fun VP_store => 
+	(* VP_result = 1 /\ VP_I <= VP_LEN / 2*)
+	let VP_store := if (string_subscript (get_string VP_store "VP_STR") (get_int VP_store "VP_I") !=? string_subscript (get_string VP_store "VP_STR") (get_int VP_store "VP_LEN" - get_int VP_store "VP_I" + 1)) then
+		((*Block: next 2 statements*)
+				let VP_store := update VP_store "VP_result" (VInteger ( 0 ))in
+				let VP_broken := true in VP_store) 
+	else
+		((*nothing and mid-seq*) VP_store) in
+			let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store 
+	end.
+
 Definition ispalindrome (VP_store: store) loop_limit := 
 	let VP_poison := false in
 	let (VP_store,VP_poison) := 
@@ -34,20 +49,8 @@ Definition ispalindrome (VP_store: store) loop_limit :=
 		(if (negb VP_poison) then
  			 (match 
 		(let going_up := 1 <? get_int VP_store "VP_LEN" / 2 in
-		let bounds_op := Z.leb in
-		let iter_op := Z.add 1 in
 		let VP_store := update VP_store "VP_I" (VInteger ( 1 )) in
-			while ( fun VP_store => bounds_op (get_int VP_store "VP_I") (get_int VP_store "VP_LEN" / 2) ) with VP_store upto loop_limit 
-			begin fun VP_store => 
-			(* VP_result = 1 /\ VP_I <= VP_LEN / 2*)
-			let VP_store := if (string_subscript (get_string VP_store "VP_STR") (get_int VP_store "VP_I") !=? string_subscript (get_string VP_store "VP_STR") (get_int VP_store "VP_LEN" - get_int VP_store "VP_I" + 1)) then
-				((*Block: next 2 statements*)
-						let VP_store := update VP_store "VP_result" (VInteger ( 0 ))in
-						let VP_broken := true in VP_store) 
-			else
-				((*nothing and mid-seq*) VP_store) in
-					let VP_store := update VP_store "VP_I" (VInteger (iter_op (get_int VP_store "VP_I"))) in VP_store 
-			end) 
+			loop_body VP_store loop_limit)
 		(* VP_result = 1 /\ ~ (VP_I <= VP_LEN / 2) *)
 		with
  		 | None => (VP_store,true)
@@ -307,6 +310,20 @@ Proof.
 	intros. unfold update. destruct (eqb_neq x y). now rewrite String.eqb_sym, (H0 H).
 Qed.
 
+Theorem update_permute : 
+  forall (m : store)
+    v1 v2 x1 x2,
+  x2 <> x1 ->
+  (x1 !-> v1 ; x2 !-> v2 ; m)
+  =
+  (x2 !-> v2 ; x1 !-> v1 ; m).
+Proof.
+  intros. apply functional_extensionality. intros.
+  unfold update. destruct (x =? x1)%string eqn:E, (x =? x2)%string eqn:E'; auto.
+  pose (String.eqb_eq x x1). pose (String.eqb_eq x x2).
+  destruct i, i0. specialize (H0 E). specialize (H2 E'). subst. contradiction.
+Qed.
+
 (* Compute fst (ispalindrome (update fresh_store "VP_STR" (VString "")) 5000) "VP_result". *)
 
 Definition output_safe (f : store -> nat -> store * bool) 
@@ -338,7 +355,62 @@ Ltac vpex :=
 			remember m as name
 	end || idtac "No match".
 
-Theorem ispalindrome_ht : forall h t,
+(* Theorem loop_body_one_iteration : forall loop_limit (s : store) h t,
+	loop_body 
+		("VP_STR" !-> (VString ((String h t) ++ (String h "")));
+		 "VP_LEN" !-> (VInteger (Z.of_nat (String.length ((String h t) ++ (String h "")))));
+		 "VP_I" !-> VInteger 0; s) loop_limit =
+	loop_body 
+		("VP_STR" !-> (VString ((String h t) ++ (String h "")));
+		 "VP_LEN" !-> (VInteger (Z.of_nat (String.length ((String h t) ++ (String h "")))));
+		 "VP_I" !-> (VInteger 1); s) loop_limit.
+Proof.
+	induction loop_limit; intros; simpl in *.
+	- now unfold loop_body.
+	- unfold loop_body; simpl. repeat rewrite get_string_eq.
+		unfold get_int. rewrite update_neq, update_neq, update_eq, update_neq, update_eq,
+			update_neq, update_neq, update_eq, update_neq, update_eq;
+			try discriminate.
+		destruct t; simpl. 
+		-- repeat unfold string_subscript. simpl.
+			replace (Z.of_nat (nat_of_ascii h) !=? -1) with true. simpl.
+			replace (Z.of_nat (nat_of_ascii h) !=? Z.of_nat (nat_of_ascii h)) with false. simpl.
+			rewrite update_permute, (update_permute _ _ _ "VP_I" "VP_STR"),
+				(update_permute _ _ _ "VP_I" "VP_LEN"), update_shadow,
+				(update_permute _ (VInteger 2) _ "VP_I"), (update_permute _ (VInteger 2) _ "VP_I" "VP_LEN"),
+				update_shadow.
+			reflexivity. *)
+
+Lemma pal_String : forall h t,
+	t <> "" ->
+	pal (String h t) -> exists t', (String h t) = (String h t') ++ (String h "").
+Proof.
+	intros. remember (String h t). induction H0; inversion Heqs; subst.
+	- contradiction.
+	- now exists t0.
+Qed.
+
+Theorem ispalindrome_ht' : forall h t,
+	pal t ->
+	output_safe ispalindrome 
+		(update fresh_store "VP_STR" (VString (String h t ++ (String h "")))) 
+		(VInteger 1).
+Proof.
+	intros. intros loop_limit output. unfold ispalindrome. simpl.
+	revert t output H h. induction loop_limit; intros.
+	- simpl in H0. inversion H0.
+	- unfold loop_body in H0. simpl in H0. unfold get_int in H0.
+		rewrite update_eq, update_neq, update_eq in H0; try discriminate.
+		unfold get_string in H0. rewrite 
+			update_neq, update_neq, update_neq, update_eq in H0; try discriminate.
+		destruct t; simpl in H0.
+		-- unfold string_subscript in H0; simpl in H0.
+			replace (Z.of_nat (nat_of_ascii h) !=? Z.of_nat (nat_of_ascii h)) with false in H0.
+			rewrite update_eq, update_shadow in H0. destruct loop_limit; inversion H0.
+			now rewrite update_neq, update_neq, update_eq. admit.
+		-- pose (pal_String a t).
+
+Theorem ispalindrome_ht' : forall h t,
 	pal t ->
 	output_safe ispalindrome 
 		(update fresh_store "VP_STR" (VString (String h t ++ (String h "")))) 
@@ -349,7 +421,8 @@ Proof.
 	- inversion Terminates.
 	- inversion Pal; subst. 
 		-- clear IHloop_limit. unfold ispalindrome in Terminates.
-			simpl in Terminates. vpex. rewrite get_int_eq in Heqbody.
+			simpl in Terminates. vpex. unfold loop_body in Heqbody. 
+			rewrite get_int_eq in Heqbody.
 			repeat unfold get_string at 5 in Heqbody;
 				rewrite update_neq, update_neq, update_neq, update_eq in Heqbody; 
 					try discriminate.
@@ -364,6 +437,11 @@ Proof.
 			rewrite update_neq, update_neq, update_eq; easy.
 		-- apply (IHloop_limit Pal). clear Terminates IHloop_limit.
 			induction (String x ""). (* last goal *) admit.
+			(* Issue with this goal is that the IH talks about
+				passing the inductive form of the string into the whole function,
+				but I need something talking about the __fixpoint__ inside the 
+				function alone... Seems like a loop invariant to me
+			*)
 
 			
 			
