@@ -32,28 +32,6 @@ Definition factorial (VP_store: store) loop_limit :=
  			(VP_store,true)) in
 	(VP_store, VP_poison).
 
-Definition output_safe (f : store -> nat -> store * bool) 
-		input expected :=
-	forall loop_limit output
-	  (Terminates: (output, false) = f input loop_limit),
-	  output "VP_result" = expected.
-
-Ltac vpex_term term := 
-	match term with [(?fst, ?snd) = 
-			match ?m with (Some s) => ?s' | None => ?n' end] => idtac s
-	end.
-
-Ltac vpex :=
-	match goal with [H: (?fst, ?snd) = 
-		match ?m with (Some s) => ?s' | None => ?n' end |- _] =>
-			let name := fresh "body" in
-			remember m as name
-		| [H: (?fst, ?snd) = (let (st, ps) := 
-			match ?m with (Some s) => ?s' | None => ?n' end in _) |- _] =>
-			let E := fresh "E" in 
-			destruct m eqn:E
-	end || idtac "No match".
-
 Require Import FunctionalExtensionality.
 
 Lemma update_shadow : forall (m : store) x v1 v2,
@@ -130,6 +108,23 @@ Proof.
 	reflexivity. destruct H. subst. reflexivity.
 Qed.
 
+Definition output_safe (f : store -> nat -> store * bool) 
+		input expected :=
+	forall loop_limit output
+	  (Terminates: (output, false) = f input loop_limit),
+	  output "VP_result" = expected.
+
+Ltac vpex :=
+	match goal with [H: (?fst, ?snd) = 
+		match ?m with (Some s) => ?s' | None => ?n' end |- _] =>
+			let name := fresh "body" in
+			remember m as name
+		| [H: (?fst, ?snd) = (let (st, ps) := 
+			match ?m with (Some s) => ?s' | None => ?n' end in _) |- _] =>
+			let E := fresh "E" in 
+			destruct m eqn:E
+	end || idtac "No match".
+
 Theorem factorial_correct : forall n st,
 	output_safe factorial ("VP_X" !-> VInteger n; st) (VInteger (Z_fact n)).
 Proof.
@@ -137,13 +132,13 @@ Proof.
 	(* 
 		When dealing with fixpoints, we almost always want to induct over their
 		decreasing argument, because this will "turn the crank" and evaluate another
-		iteration of the loop. 
-		
+		iteration of the loop.
+
 		There's an issue though: if we induct too early over
 		the decreasing argument (loop_limit in VOLPIC-lifted code), we end up with
 		an inductive hypothesis that refers to code outside of the fixpoint. This is
 		no good, because it generally ends up over-specializing our assumptions,
-		making them unusable. 
+		making them unusable.
 
 		The solution is to simplify until we get to just the loop in our termination
 		hypothesis. Note: this technique will need more refinement if there is code
