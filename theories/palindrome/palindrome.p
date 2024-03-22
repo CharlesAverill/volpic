@@ -18,6 +18,8 @@ begin
       break;
     end;
   end;
+  (* pal str -> ispalindrome = true /\ ~ (i <= len div 2) --> *)
+  (* pal str -> ispalindrome = true *)
 end;
 
 var

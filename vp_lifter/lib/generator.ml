@@ -69,7 +69,7 @@ let type_of_expr = function
       _log Log_Debug
         ("Getting type of " ^ id ^ ": " ^ string_of_coq_type (!typctx id)) ;
       !typctx id
-  | Integer _ | Add _ | Sub _ | Div _ ->
+  | Integer _ | Add _ | Sub _ | Mul _ | Div _ ->
       Z
   | Gt _ | Lt _ | Geq _ | Leq _ | Eq _ | Uneq _ ->
       Bool
@@ -116,6 +116,8 @@ let rec string_of_expr x shallow bound_vars =
       binop "+" e1 e2
   | Sub (e1, e2) ->
       binop "-" e1 e2
+  | Mul (e1, e2) ->
+      binop "*" e1 e2
   | Div (e1, e2) ->
       binop "/" e1 e2
   | Gt (e1, e2) ->
@@ -206,7 +208,7 @@ let store_constr expr =
   match expr with
   | Identifier id ->
       constr_of_coq_type (!typctx id)
-  | Integer _ | Add _ | Sub _ | Div _ ->
+  | Integer _ | Add _ | Sub _ | Mul _ | Div _ ->
       int_expr_constr
   | Gt _ | Lt _ | Geq _ | Leq _ | Eq _ | Uneq _ ->
       bool_expr_constr
@@ -408,6 +410,7 @@ and all_ids_in_expr : expr -> string list = function
       [id]
   | Add (e1, e2)
   | Sub (e1, e2)
+  | Mul (e1, e2)
   | Div (e1, e2)
   | Gt (e1, e2)
   | Lt (e1, e2)

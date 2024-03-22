@@ -10,6 +10,7 @@ type expr =
   | String of string
   | Add of expr * expr
   | Sub of expr * expr
+  | Mul of expr * expr
   | Div of expr * expr
   | Gt of expr * expr
   | Lt of expr * expr
@@ -169,6 +170,10 @@ let rec expr_of_parse_tree parse_tree =
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Sub ->
       Sub
+        ( expr_of_parse_tree (List.hd parse_tree.children)
+        , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
+  | Mul ->
+      Mul
         ( expr_of_parse_tree (List.hd parse_tree.children)
         , expr_of_parse_tree (List.hd (List.tl parse_tree.children)) )
   | Div ->

@@ -71,8 +71,14 @@ Inductive pal : string -> Prop :=
 | pal_ht : forall (h : ascii) (t : string), 
 	pal t -> pal ((String h t) ++ (String h EmptyString)).
 
-Definition reverse (s : string) :=
-	string_of_list_ascii (rev (list_ascii_of_string s)).
+(* Definition rev (s : string) :=
+	string_of_list_ascii (rev (list_ascii_of_string s)). *)
+
+Fixpoint rev (s : string) :=
+	match s with 
+	| "" => ""
+	| String h t => (rev t ++ (String h ""))
+	end.
 
 Lemma string_of_list_ascii_distr : forall l1 l2,
 	string_of_list_ascii (l1 ++ l2) = 
@@ -83,13 +89,10 @@ Proof.
 Qed.
 
 Lemma rev_String : forall a s,
-	reverse (String a s) = reverse s ++ (String a EmptyString).
+	rev (String a s) = rev s ++ (String a EmptyString).
 Proof.
 	intros. generalize dependent a.
-	induction s; simpl in *; intros.
-	reflexivity.
-	rewrite IHs; simpl in *. unfold reverse; simpl.
-	now repeat rewrite string_of_list_ascii_distr; simpl.
+	induction s; simpl in *; intros ;reflexivity.
 Qed.
 
 Lemma String_app_assoc : forall a s1 s2,
@@ -107,12 +110,12 @@ Proof.
 Qed.
 
 Theorem pal_app_rev : forall (s : string),
-  pal (s ++ (reverse s)).
+  pal (s ++ (rev s)).
 Proof.
     induction s; simpl.
     constructor.
-	rewrite rev_String. replace (String a (s ++ reverse s ++ String a "")) with 
-		(String a (s ++ reverse s) ++ String a ""). now constructor.
+	replace (String a (s ++ rev s ++ String a "")) with 
+		(String a (s ++ rev s) ++ String a ""). now constructor.
 	now rewrite String_app_assoc, <- app_assoc, <- String_app_assoc.
 Qed.
 
@@ -124,19 +127,18 @@ Proof.
 Qed.
 
 Lemma reverse_app_distr : forall s1 s2,
-	reverse (s1 ++ s2) = reverse s2 ++ reverse s1.
+	rev (s1 ++ s2) = rev s2 ++ rev s1.
 Proof.
-	induction s1; intros; simpl in *. 
-	unfold reverse at 3. simpl. now rewrite app_empty_r.
-	rewrite String_app_assoc, rev_String, app_assoc, <- IHs1.
-	unfold reverse; simpl. now rewrite string_of_list_ascii_distr.
+	induction s1; intros; simpl in *.
+	now rewrite app_empty_r.
+	now rewrite app_assoc, <- IHs1.
 Qed.
 
 Theorem pal_rev : forall (s: string), 
-    pal s -> s = reverse s.
+    pal s -> s = rev s.
 Proof.
     intros. induction H; simpl in *; try reflexivity.
-    now rewrite rev_String, reverse_app_distr, <- IHpal.
+    now rewrite reverse_app_distr, <- IHpal.
 Qed.
 
 Lemma palindrome_cons : forall x s,
@@ -237,7 +239,7 @@ Qed.
 
 Lemma palindrome_step : 
     forall n s,
-    (String.length s <= n)%nat -> s = reverse s -> pal s.
+    (String.length s <= n)%nat -> s = rev s -> pal s.
 Proof.
     induction n; intros.
     - inversion H. rewrite (length_0_nil s H2).
@@ -248,7 +250,7 @@ Proof.
             apply pal_single.
             destruct H1 as [last], H1 as [mid]; subst.
             simpl in *. apply le_S_n in H.
-			rewrite rev_String, reverse_app_distr in H0; simpl in *.
+			rewrite reverse_app_distr in H0; simpl in *.
             inversion H0. apply pal_ht.
             apply IHn. apply length_app_le in H.
             now destruct H.
@@ -256,7 +258,7 @@ Proof.
 Qed.
 
 Theorem palindrome_converse: forall s,
-    s = reverse s -> pal s.
+    s = rev s -> pal s.
 Proof.
     intros. apply (palindrome_step (String.length s) s). 
     subst. apply le_n.
@@ -409,8 +411,9 @@ Proof.
 			rewrite update_eq, update_shadow in H0. destruct loop_limit; inversion H0.
 			now rewrite update_neq, update_neq, update_eq. admit.
 		-- pose (pal_String a t).
+Admitted.
 
-Theorem ispalindrome_ht' : forall h t,
+(* Theorem ispalindrome_ht' : forall h t,
 	pal t ->
 	output_safe ispalindrome 
 		(update fresh_store "VP_STR" (VString (String h t ++ (String h "")))) 
@@ -441,7 +444,7 @@ Proof.
 				passing the inductive form of the string into the whole function,
 				but I need something talking about the __fixpoint__ inside the 
 				function alone... Seems like a loop invariant to me
-			*)
+			*) *)
 
 			
 			
@@ -457,10 +460,160 @@ Qed.
 Hint Unfold get_int.
 Hint Unfold get_string.
 
+Fixpoint remove_first_n_option (s : string) (n : nat) : option string :=
+	match n with 
+	| O => Some s
+	| S n' => match s with "" => None | (String h t) => remove_first_n_option t n' end
+	end.
+
+Definition remove_last_n_option (s : string) (n : nat) : option string :=
+	match remove_first_n_option (rev s) n with 
+	| None => None
+	| Some s' => Some (rev s')
+	end.
+
+Fixpoint remove_first_n (s : string) (n : nat) : string :=
+	match n with 
+	| O => s
+	| S n' => match s with "" => "" | (String h t) => remove_first_n t n' end
+	end.
+
+Definition remove_last_n (s : string) (n : nat) : string :=
+	rev (remove_first_n (rev s) n).
+
+Definition split_option (s : string) : string * string :=
+	let l := (String.length s / 2)%nat in 
+	match (remove_last_n_option s l, remove_first_n_option s l) with 
+	| (Some s1, Some s2) => (s1, s2)
+	| _ => ("", "")
+	end.
+
+Definition split (s : string) : string * string :=
+	let l := (String.length s / 2)%nat in 
+	(remove_last_n s l, remove_first_n s (if even (String.length s) then l else l + 1)).
+
+Definition remove_center_n_option (s : string) (n : nat) : option string :=
+	let (s1, s2) := split s in 
+	let n' := (n / 2)%nat in 
+	match (remove_last_n_option s1 n'), (remove_first_n_option s2 n') with 
+	| Some s1', Some s2' => Some (s1' ++ s2')
+	| _, _ => None
+	end.
+
+Definition remove_center_n (s : string) (n : nat) : string :=
+	let (s1, s2) := split s in 
+	let n' := (n / 2)%nat in 
+	remove_last_n s1 n' ++ remove_first_n s2 n'.
+
+(* H: assert that if you remove everything from (string s) 
+	except first and last 0 characters,
+   then you get a palindrome (equals its rev) *)
+
+(* revert H. 
+replace s with its center (2 * 0) chars removed
+generalize 0 (at _ ?) as i. 
+Induct on loop_limit.
+	Gets IH - if you've done everything up to i, 
+	you now have up to i + 1 is a palindrome *)
+
+Lemma app_empty : forall s1 s2,
+	s1 ++ s2 = "" -> s1 = "" /\ s2 = "".
+Proof.
+	induction s1; intros; simpl in *.
+	now split. inversion H.
+Qed.
+
+Lemma remove_first_zero : forall s,
+	remove_first_n s 0 = s.
+Proof. destruct s; reflexivity. Qed.
+
+Lemma app_unfold : forall a s1 s2 s,
+	s1 ++ s2 = String a s -> 
+		(s1 <> "" /\ exists s1', (String a s1') ++ s2 = String a s) \/ 
+		(s1 = "" /\ s2 = String a s).
+Proof.
+	induction s1; intros; simpl in *.
+	- right. now split.
+	- left. inversion H; subst. split. intro. inversion H0.
+		now exists s1. 
+Qed.
+
+Lemma app_string_first_matches : forall a s1 s2 s3,
+	(String a s1) ++ s2 = String a s3 ->
+	s1 ++ s2 = s3.
+Proof.
+	induction s1; intros; simpl in *. now inversion H.
+	now inversion H; subst.
+Qed.
+
+Lemma Strings_eq_tail : forall a s1 s2,
+	s1 = s2 -> String a s1 = String a s2.
+Proof. intros. now subst. Qed.
+
+Lemma reverse_involutive : forall s,
+	rev (rev s) = s.
+Proof.
+	induction s; simpl. reflexivity.
+	rewrite reverse_app_distr, IHs. reflexivity.
+Qed.
+
+Lemma remove_last_zero : forall s,
+	remove_last_n s 0 = s.
+Proof.
+	induction s; unfold remove_last_n; simpl.
+	reflexivity. rewrite remove_first_zero.
+	rewrite reverse_app_distr, reverse_involutive. reflexivity.
+Qed.
+
+Lemma split_join : forall s s1 s2, 
+	split s = (s1, s2) ->
+	s1 ++ s2 = s.
+Admitted.
+
+Lemma remove_center_zero : forall s,
+	remove_center_n s 0 = s.
+Proof.
+	induction s. reflexivity. unfold remove_center_n.
+	simpl (0 / 2)%nat. destruct (split (String a s)) eqn:E.
+	now rewrite remove_last_zero, remove_first_zero, (split_join _ _ _ E).
+Qed.
+
 Definition palindrome_partial_correctness : 
 	forall (s : string),
-	pal s -> output_safe ispalindrome (update fresh_store "VP_STR" (VString s)) (VInteger 1).
+	(* pal s ->  *)
+	s = rev s ->
+	output_safe ispalindrome (update fresh_store "VP_STR" (VString s)) (VInteger 1).
 Proof.
+	intros s Pal loop_limit output Terminates.
+	assert (H: remove_last_n (remove_first_n s 0) 0 = rev (remove_last_n (remove_first_n s 0) 0)).
+		now rewrite remove_last_zero, remove_first_zero.
+	revert H. replace s with (remove_center_n s (2 * 0)) in * by
+		now simpl (2 * 0)%nat; rewrite remove_center_zero.
+	unfold ispalindrome in Terminates. simpl in Terminates.
+	revert s output Pal Terminates.
+	generalize O at 2 4 5 6 7 8 10 11 12 14 15 16 as i.
+	induction loop_limit; intros.
+	- inversion Terminates.
+	- apply IHloop_limit with i s; try assumption. unfold loop_body; simpl.
+	
+	unfold loop_body in Terminates; simpl in Terminates.
+		unfold get_int in Terminates. rewrite update_eq, 
+			update_neq, update_eq in Terminates; try discriminate.
+		unfold get_string in Terminates. rewrite update_neq, update_eq,
+			update_neq, update_neq, update_neq, update_eq in Terminates; try discriminate.
+		
+
+	
+	
+	
+	replace s with (string_of_list_ascii (list_ascii_of_string s)) in *.
+	unfold ispalindrome in Terminates. simpl in Terminates. vpex.
+	assert 
+	revert loop_limit H output Terminates. induction (list_ascii_of_string s); intros.
+	simpl in *. admit.
+	simpl in *. unfold ispalindrome in Terminates.
+
+
 	(* intros. intros loop_limit output Terminates. induction loop_limit.
 		inversion Terminates.
 		unfold ispalindrome in Terminates. simpl in Terminates.
