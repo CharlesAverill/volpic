@@ -121,7 +121,7 @@ Ltac vpex :=
 			remember m as name
 		| [H: (?fst, ?snd) = (let (st, ps) := 
 			match ?m with (Some s) => ?s' | None => ?n' end in _) |- _] =>
-			let E := fresh "E" in 
+			let E := fresh "Eq" in 
 			destruct m eqn:E
 	end || idtac "No match".
 
@@ -156,33 +156,31 @@ Proof.
 		unfolding the `let _ := _ in _` notation, making it much easier to 
 		write sub-proofs about them.
 	*)
-	vpex; inversion Terminates; subst; clear Terminates.
+	vpex; inversion Terminates. subst. clear Terminates.
 	(*
 		We will often need some clever generalizations in proofs such as these.
 		These loosely resemble loop invariants that we'd have to write if we were
 		dealing with the same code in an imperative model using Hoare logic.
 	*)
-	replace (Z_fact n) with (1 * Z_fact n). 
+	replace (Z_fact n) with (1 * Z_fact n) by lia. 
 		generalize dependent n. generalize 1 at 3 4 as inter_prod.
 	(* 
 		Finally - we can do our induction. We will always get a trivial case where
 		the loop limit is zero, causing an early termination, which poisons the store.
 	*)
-	induction loop_limit; intros. inversion E.
+	induction loop_limit; intros. inversion Eq.
 	match goal with [H: forall i n, ?x ?l ?b ?store = _ -> _ |- _] => 
 		remember x as loop_body end.
-	simpl in *.
 	(* We can now start to reduce some of the assignments that have built up *) 
-	unfold get_int in E.
-	rewrite update_neq, update_eq, update_eq, update_neq, update_neq, update_eq in E;
+	unfold get_int in Eq.
+	rewrite update_neq, update_eq, update_eq, update_neq, update_neq, update_eq in Eq;
 		try discriminate.
 	(* We have a conditional value for our output store, so let's do a case analysis *)
-	destruct (1 <=? n) eqn:E0.
-	- rewrite update_shadow, update_permute, update_shadow in E; try discriminate.
+	destruct (1 <=? n) eqn:E.
+	- rewrite update_shadow, update_permute, update_shadow in Eq; try discriminate.
 		(* Now we see why we generalized before inducting *)
-		rewrite (IHloop_limit _ _ E). rewrite Heqloop_body in E. 
-			rewrite <- Z.mul_assoc, <- Z_fact_sub. reflexivity. lia.
-	- inversion E; subst. rewrite update_eq.
-		now rewrite (Z_fact_nle_1 _ E0), Z.mul_1_r.
-	- lia.
+		erewrite IHloop_limit. rewrite <- Z.mul_assoc, <- Z_fact_sub.
+			reflexivity. lia. assumption.
+	- inversion Eq; subst. rewrite update_eq.
+		now rewrite Z_fact_nle_1, Z.mul_1_r.
 Qed.
