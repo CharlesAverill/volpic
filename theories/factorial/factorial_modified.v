@@ -152,7 +152,7 @@ Proof.
 		This is annoying, because we can't use `inversion` or `simpl` to do any 
 		of the substitution that would seem intuitive at this point.
 
-		The `vpex` looks for patterns like these and destructs the <code> terms,
+		The `vpex` tactic looks for patterns like these and destructs the <code> terms,
 		unfolding the `let _ := _ in _` notation, making it much easier to 
 		write sub-proofs about them.
 	*)
