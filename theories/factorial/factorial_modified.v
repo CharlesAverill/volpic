@@ -34,8 +34,9 @@ Definition factorial (VP_store: store) loop_limit :=
 
 Definition output_safe (f : store -> nat -> store * bool) 
 		input expected :=
-	forall loop_limit output, 
-		(output, false) = f input loop_limit -> output "VP_result" = expected.
+	forall loop_limit output
+	  (Terminates: (output, false) = f input loop_limit),
+	  output "VP_result" = expected.
 
 Ltac vpex_term term := 
 	match term with [(?fst, ?snd) = 
@@ -129,25 +130,64 @@ Proof.
 	reflexivity. destruct H. subst. reflexivity.
 Qed.
 
-Theorem factorial_correct : forall n,
-	output_safe factorial ("VP_X" !-> VInteger n; fresh_store) (VInteger (Z_fact n)).
+Theorem factorial_correct : forall n st,
+	output_safe factorial ("VP_X" !-> VInteger n; st) (VInteger (Z_fact n)).
 Proof.
-	intros n loop_limit output Terminates. unfold factorial in Terminates. simpl in Terminates.
-		vpex. inversion Terminates; subst; clear Terminates. 
-		generalize dependent s. replace (Z_fact n) with (1 * Z_fact n).
+	unfold output_safe. intros. 
+	(* 
+		When dealing with fixpoints, we almost always want to induct over their
+		decreasing argument, because this will "turn the crank" and evaluate another
+		iteration of the loop. 
+		
+		There's an issue though: if we induct too early over
+		the decreasing argument (loop_limit in VOLPIC-lifted code), we end up with
+		an inductive hypothesis that refers to code outside of the fixpoint. This is
+		no good, because it generally ends up over-specializing our assumptions,
+		making them unusable. 
+
+		The solution is to simplify until we get to just the loop in our termination
+		hypothesis. Note: this technique will need more refinement if there is code
+		after the loop.
+	*)
+	unfold factorial in Terminates. simpl in Terminates.
+	(*
+		We end up with a termination hypothesis that looks like
+			(output, false) := (let (VP_store, VP_poison) := <code> in (VP_store, VP_poison)).
+
+		This is annoying, because we can't use `inversion` or `simpl` to do any 
+		of the substitution that would seem intuitive at this point.
+
+		The `vpex` looks for patterns like these and destructs the <code> terms,
+		unfolding the `let _ := _ in _` notation, making it much easier to 
+		write sub-proofs about them.
+	*)
+	vpex; inversion Terminates; subst; clear Terminates.
+	(*
+		We will often need some clever generalizations in proofs such as these.
+		These loosely resemble loop invariants that we'd have to write if we were
+		dealing with the same code in an imperative model using Hoare logic.
+	*)
+	replace (Z_fact n) with (1 * Z_fact n). 
 		generalize dependent n. generalize 1 at 3 4 as inter_prod.
-		induction loop_limit; intros.
-			inversion E. match goal with [H: forall i n s, ?x ?l ?b ?store = _ -> _ |- _] => 
-				remember x as loop_body end.
-			simpl in *. unfold get_int in E.
-				rewrite update_neq, update_eq, update_eq, update_neq, update_neq, update_eq in E;
-					try discriminate. destruct (1 <=? n) eqn:E0.
-			rewrite update_shadow, update_permute, update_shadow in E; try discriminate.
-			rewrite (IHloop_limit _ _ _ E).
-			rewrite Heqloop_body in E. destruct loop_limit. inversion E. simpl in E.
-			unfold get_int in E. rewrite update_eq in E.
+	(* 
+		Finally - we can do our induction. We will always get a trivial case where
+		the loop limit is zero, causing an early termination, which poisons the store.
+	*)
+	induction loop_limit; intros. inversion E.
+	match goal with [H: forall i n, ?x ?l ?b ?store = _ -> _ |- _] => 
+		remember x as loop_body end.
+	simpl in *.
+	(* We can now start to reduce some of the assignments that have built up *) 
+	unfold get_int in E.
+	rewrite update_neq, update_eq, update_eq, update_neq, update_neq, update_eq in E;
+		try discriminate.
+	(* We have a conditional value for our output store, so let's do a case analysis *)
+	destruct (1 <=? n) eqn:E0.
+	- rewrite update_shadow, update_permute, update_shadow in E; try discriminate.
+		(* Now we see why we generalized before inducting *)
+		rewrite (IHloop_limit _ _ E). rewrite Heqloop_body in E. 
 			rewrite <- Z.mul_assoc, <- Z_fact_sub. reflexivity. lia.
-			inversion E; subst. rewrite update_eq.
-			rewrite (Z_fact_nle_1 _ E0). now rewrite Z.mul_1_r. lia.
-		inversion Terminates.
+	- inversion E; subst. rewrite update_eq.
+		now rewrite (Z_fact_nle_1 _ E0), Z.mul_1_r.
+	- lia.
 Qed.
