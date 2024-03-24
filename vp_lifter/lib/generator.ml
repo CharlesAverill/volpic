@@ -237,7 +237,7 @@ let rec loop condition body post depth =
     ; "with"
     ; store_name
     ; "upto"
-    ; "1000%nat"
+    ; loop_limit
     ; "begin"
     ; econcat " "
         [ "fun"
@@ -442,7 +442,7 @@ and all_ids_in_stmt : stmt -> string list = function
   | IfThenElse (expr, st, sf) ->
       all_ids_in_expr expr @ all_ids_in_stmt st @ all_ids_in_stmt sf
 
-and runtime_check = function ForLoop _ -> true | _ -> false
+and runtime_check = function ForLoop _ | WhileLoop _ -> true | _ -> false
 
 (*
    Wrapper for string_of_stmt that adds a "poison check," essentially capturing
@@ -491,7 +491,10 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
       , ( match pt.func_type with
         | Procedure (id, rtl) ->
             econcat " "
-              ( [definition_str; sanitize_id id; "(" ^ store_name ^ ": store)"]
+              ( [ definition_str
+                ; sanitize_id id
+                ; "(" ^ store_name ^ ": store)"
+                ; "(" ^ loop_limit ^ ": nat)" ]
               (* I'm going to ignore function args for a bit *)
               (* @ List.mapi
                   (fun i rt ->
@@ -506,7 +509,10 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
               @ [":="; "\n"] )
         | Function (id, rtl, rt) ->
             econcat " "
-              ( [definition_str; sanitize_id id; "(" ^ store_name ^ ": store)"]
+              ( [ definition_str
+                ; sanitize_id id
+                ; "(" ^ store_name ^ ": store)"
+                ; "(" ^ loop_limit ^ ": nat)" ]
               (* Not sure how I'll handle func args yet *)
               (* @ List.mapi
                   (fun i rt ->
@@ -527,7 +533,7 @@ let rec _str_of_gal_aux ?(depth = 1) (extract : bool) bound_vars = function
       , econcat "\n"
           ( [letin depth poison "false"]
           @ List.map (fun g -> snd (_str_of_gal_aux extract bound_vars g)) gl
-          @ [store_name] ) )
+          @ [pairify [store_name; poison]] ) )
   | Statement s ->
       (false, poison_check extract bound_vars depth s)
   | Comment s ->

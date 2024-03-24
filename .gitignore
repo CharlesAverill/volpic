@@ -30,3 +30,15 @@ theories/mf.*
 *.mli
 a.out
 .gdb_history
+live-demo/*
+tex-mf-fpc/tex
+tex-mf-fpc/mf
+algos/algorithms
+factorial/factorial
+palindrome.ml
+factorial.ml
+algorithms.ml
+palindrome/palindrome
+search.ml
+test
+test_old.ml

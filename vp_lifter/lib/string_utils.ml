@@ -26,6 +26,8 @@ let unit_expr_constr = "VUnit"
 
 let poison = id_prefix ^ "poison"
 
+let loop_limit = id_prefix ^ "loop_limit"
+
 let broken = id_prefix ^ "broken"
 
 let sf_get = "sf_get"

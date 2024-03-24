@@ -62,18 +62,20 @@ let () =
     String.concat "\n"
       ( List.mapi
           (fun i (func_name, (gast, gamma, ids)) ->
-            _log Log_Info
-              ( "Lifting " ^ func_name ^ " ("
-              ^ string_of_int (i + 1)
-              ^ "/" ^ n_funcs ^ ")" ) ;
-            try
-              string_of_gallina (i = 0) args.input_fn args.do_extract
-                args.extract_language args.extract_path func_name gast gamma
-            with Failure s ->
-              let err = "Failed to lift " ^ func_name ^ ": " ^ s in
-              _log Log_Error err ; comment err )
+            if args.no_main && func_name = "$main" then comment "Ignored $main"
+            else (
+              _log Log_Info
+                ( "Lifting " ^ func_name ^ " ("
+                ^ string_of_int (i + 1)
+                ^ "/" ^ n_funcs ^ ")" ) ;
+              try
+                string_of_gallina (i = 0) args.input_fn args.do_extract
+                  args.extract_language args.extract_path func_name gast gamma
+              with Failure s ->
+                let err = "Failed to lift " ^ func_name ^ ": " ^ s in
+                _log Log_Error err ; comment err ) )
           (List.combine func_names gasts_gammas_funcids)
-      @ ["Compute (main fresh_store)."] )
+      @ if args.no_main then [] else ["Compute (main fresh_store)."] )
   in
   (* _log Log_Debug out ; *)
   let oc = open_out args.output_fn in

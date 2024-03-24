@@ -19,7 +19,8 @@ type arguments =
   ; extract_language: string
   ; extract_path: string
   ; fpc_path: string
-  ; use_preproc: bool }
+  ; use_preproc: bool
+  ; no_main: bool }
 
 let parse_arguments () =
   let files = ref [] in
@@ -31,6 +32,7 @@ let parse_arguments () =
   let extract_fp = ref "" in
   let fpc_path = ref "fpc" in
   let use_preproc = ref false in
+  let no_main = ref false in
   let speclist =
     Arg.
       [ ( "-logging"
@@ -69,7 +71,8 @@ let parse_arguments () =
         , Arg.Set use_preproc
         , "Use a preprocessed tree.log if available. These files are emitted \
            on parsing. This option should only be used if the program isn't \
-           changing (updates won't be detected)" ) ]
+           changing (updates won't be detected)" )
+      ; ("-no-main", Arg.Set no_main, "Don't lift the $main function") ]
   in
   let usage_msg = "Usage: vp_lifter <INPUT> <OUTPUT>? [options]" in
   Arg.parse speclist (fun n -> files := n :: !files) usage_msg ;
@@ -101,4 +104,5 @@ let parse_arguments () =
   ; extract_language= !extract_lang
   ; extract_path= !extract_fp
   ; fpc_path= !fpc_path
-  ; use_preproc= !use_preproc }
+  ; use_preproc= !use_preproc
+  ; no_main= !no_main }
