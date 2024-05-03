@@ -9,7 +9,7 @@ code, which can then be verified in the [Coq Proof Assistant](https://coq.inria.
 and [extracted](https://coq.inria.fr/doc/v8.9/refman/addendum/extraction.html)
 into OCaml or Haskell code.
 
-Read [the 2024 PLDI SRC submission](https://seashell.charles.systems/publications/VOLPIC_SRC.pdf)
+Read the [2024 PLDI SRC extended abstract](https://seashell.charles.systems/publications/VOLPIC_SRC.pdf)
 for an explanation of the project's purpose, structure, and accomplishments. 
 
 ## Usage
