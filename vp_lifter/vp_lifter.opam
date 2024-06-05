@@ -11,6 +11,7 @@ bug-reports: "https://github.com/CharlesAverill/vp_lifter/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.9"}
+  "menhir"
   "odoc" {with-doc}
 ]
 build: [
