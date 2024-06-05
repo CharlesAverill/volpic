@@ -21,5 +21,4 @@
  (name vp_lifter)
  (synopsis "Lifter for the VOLPLIC Pascal verifier system")
  (description "Lifter for the VOLPIC Pascal verifier system")
- (depends ocaml dune menhir))
-
+ (depends ocaml dune menhir ocamlformat))

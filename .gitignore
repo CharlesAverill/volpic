@@ -27,6 +27,7 @@ theories/.lia.cache
 theories/test.*
 theories/tex.*
 theories/mf.*
+theories/*.ml*
 *.mli
 a.out
 .gdb_history
@@ -34,11 +35,8 @@ live-demo/*
 tex-mf-fpc/tex
 tex-mf-fpc/mf
 algos/algorithms
-factorial/factorial
-palindrome.ml
-factorial.ml
-algorithms.ml
-palindrome/palindrome
+theories/factorial/factorial
+theories/palindrome/palindrome
 search.ml
 test
 test_old.ml

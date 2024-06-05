@@ -13,10 +13,14 @@ let preamble extract extract_lang =
   let req_imps =
     List.map
       (fun x -> "Require Import " ^ x ^ ".")
-      ( ["Volpic_preamble"; "String"; "ZArith"; "List"; "Bool"]
+      ( ["Volpic_preamble"]
       @
       if extract then [coq_extraction_dep "Basic"; coq_extraction_dep "String"]
-      else [] )
+      else [] ) in
+  let req_exps =
+    List.map
+      (fun x -> "Require Export " ^ x ^ ".")
+      ( ["String"; "ZArith"; "List"; "Bool"] )
   in
   let scopes =
     List.map
@@ -25,7 +29,7 @@ let preamble extract extract_lang =
   in
   let imports = List.map (fun x -> "Import " ^ x ^ ".") ["ListNotations"] in
   econcat "\n"
-    (comment "Preamble" :: List.concat [req_imps; [ex]; scopes; imports])
+    (comment "Preamble" :: List.concat [req_imps; req_exps; [ex]; scopes; imports])
   ^ "\n\n"
 
 let lang_ext l =

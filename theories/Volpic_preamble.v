@@ -1,13 +1,12 @@
 Require Import String.
 Require Import ZArith.
 Require Import List.
+Require Import FunctionalExtensionality.
 Import ListNotations.
 Open Scope Z.
 Open Scope string_scope.
 Open Scope list_scope.
 
-Declare Scope vp_scope.
-Open Scope vp_scope.
 Definition id_type := string.
 
 Inductive value : Type :=
@@ -117,6 +116,49 @@ Definition subscript {T : Type} (vec : list T) (n : Z) : option T :=
 Definition update (s : store) (x : id_type) (y : value) (id : id_type) : value :=
     if id =? x then y else s id.
 
+Notation "'_' '!->' v" := (fresh_store v)
+    (at level 100, right associativity) : volpic_notation.
+Notation "x '!->' y ';' f" := (update f x y)
+    (at level 100, y at next level, right associativity) : volpic_notation.
+
+Open Scope volpic_notation.
+
+Lemma update_shadow : forall (m : store) x v1 v2,
+  (x !-> v2 ; x !-> v1 ; m) = (x !-> v2 ; m).
+Proof.
+  intros. apply functional_extensionality. intros.
+  unfold update. destruct (String.eqb x0 x) eqn:E; reflexivity.
+Qed.
+
+Lemma update_eq : forall (m : store) x v,
+	(x !-> v; m) x = v.
+Proof.
+	intros. unfold update. now rewrite String.eqb_refl.
+Qed.
+
+Lemma update_neq : forall (m : store) x y v,
+	x <> y ->
+	(x !-> v; m) y = m y.
+Proof.
+	intros. unfold update. destruct (eqb_neq x y). now rewrite eqb_sym, (H1 H).
+Qed.
+
+Theorem update_permute : 
+  forall (m : store)
+    v1 v2 x1 x2,
+  x2 <> x1 ->
+  (x1 !-> v1 ; x2 !-> v2 ; m)
+  =
+  (x2 !-> v2 ; x1 !-> v1 ; m).
+Proof.
+  intros. apply functional_extensionality. intros.
+  unfold update. destruct (x =? x1)%string eqn:E, (x =? x2)%string eqn:E'; auto.
+  pose proof (String.eqb_eq x x1). pose proof (String.eqb_eq x x2).
+  destruct H0, H1. specialize (H0 E). specialize (H1 E'). subst. contradiction.
+Qed.
+
+Close Scope volpic_notation.
+
 (* Definition update_record (dest_store : store) (dest_prefix : id_type) (source_store : store) (source_prefix : id_type) :=
     let record_ids := List.filter (String.prefix source_prefix) (ids source_store) in
     List.fold_left (fun acc id => update acc (
@@ -130,8 +172,6 @@ Definition update (s : store) (x : id_type) (y : value) (id : id_type) : value :
 
 Definition multi_ands bl :=
     List.fold_left andb bl true.
-
-Close Scope vp_scope.
 
 Require Import Coq.extraction.Extraction.
 Require Import ExtrOcamlBasic.
