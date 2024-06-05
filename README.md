@@ -32,7 +32,8 @@ The build will have completed if three binaries `ppc1`, `ppc2`, and `ppc3` have 
 To compile and run the lifter:
 
 ```bash
-cd vp_lifter
+git clone https://github.com/CharlesAverill/volpic
+cd volpic/vp_lifter
 make
 dune exec vp_lifter -- <path_to_program> -fpc-path "<path-to-custom-fpc-source>/compiler/ppcx64" -fpc-args "-Fu<path-to-custom-fpc-source>/rtl/units/x86_64-linux/"
 ```
