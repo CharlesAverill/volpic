@@ -14,7 +14,10 @@ for an explanation of the project's purpose, structure, and accomplishments.
 
 ## Usage
 
-First build a custom version of FPC based on [my branch](https://gitlab.com/CharlesAverill/source/-/tree/volpic_fpc)*. This should look like:
+First, build a custom version of FPC based on [my branch](https://gitlab.com/CharlesAverill/source/-/tree/volpic_fpc)*. 
+Note, building the compiler requires an existing installation of FPC. 
+Check out the [official installation guide](https://wiki.freepascal.org/Installing_the_Free_Pascal_Compiler).
+Building my custom FPC should look like:
 
 ```bash
 git clone https://gitlab.com/CharlesAverill/source/ fpc-source
@@ -23,6 +26,8 @@ git checkout volpic_fpc
 cd compiler
 make cycle -j8
 ```
+
+The build will have completed if three binaries `ppc1`, `ppc2`, and `ppc3` have been generated, as well as the final compiler build, denoted by the architecture you built for (ex. `ppcx64`)
 
 To compile and run the lifter:
 
