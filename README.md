@@ -1,6 +1,7 @@
 # VOLPIC
 
-![logo_black.png](media/logo_white.png)
+![logo_black.png](media/logo_white.png#gh-dark-mode-only)
+![logo_white.png](media/logo_white.png#gh-light-mode-only)
 
 VOLPIC, or "Verifier Of Lifted Pascal In Coq," is a platform for lifting 
 [FPC](https://www.freepascal.org/)-compatible Pascal code into equivalent 
